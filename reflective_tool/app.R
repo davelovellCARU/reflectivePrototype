@@ -1,4 +1,5 @@
 library(shiny)
+library(stringr)
 
 
 ## Variables -------------------------------------------------------------
@@ -17,7 +18,9 @@ makeNameInputs <- function(tab = NULL, rows = 5) {
     
     lapply(1:rows,
            function(number) {
-               textInput(inputId = paste0(tab, "_name_", as.character(number)),
+               textInput(inputId = paste0(str_replace_all(tab, "[:space:]", "-"),
+                                          "_name_",
+                                          as.character(number)),
                          label = {
                              if(number == 1) "Activity"
                              else NULL
@@ -35,7 +38,10 @@ makeStatusInputs <- function(tab = NULL, rows = 5, choices = statusChoices) {
     # make list
         lapply(1:rows,
            function(number) {
-               selectInput(inputId = paste0(tab, "_status_", as.character(number)),
+               selectInput(inputId = paste0(
+                   str_replace_all(tab, "[:space:]", "-"),
+                   "_status_",
+                   as.character(number)),
                          label = {
                              if(number == 1) "This activity has:"
                              else NULL
@@ -54,7 +60,10 @@ makeFeelingInputs <- function(tab = NULL, rows = 5) {
     # make list
     lapply(1:rows,
            function(number) {
-               selectizeInput(inputId = paste0(tab, "_feeling_", as.character(number)),
+               selectizeInput(inputId = paste0(
+                   str_replace_all(tab, "[:space:]", "-"),
+                   "_feeling_",
+                   as.character(number)),
                            label = {
                                if(number == 1) "I feel:"
                                else NULL
@@ -66,6 +75,24 @@ makeFeelingInputs <- function(tab = NULL, rows = 5) {
     return(inputList)
 }
 
+### makeInputsGrid() generates the grid of all the inputs :::::::::::::::::::::
+makeInputsTab <- function(tabName) {
+    stopifnot( is.character(tabName) )
+    
+    renderUi({
+        tabPanel(str_to_title(tabName),
+                fixedRow(
+                column(4, makeNameInputs(tab = str_to_lower(tabName))),
+                column(5, makeStatusInputs(tab = str_to_lower(tabName))),
+                column(3, makeFeelingInputs(tab = str_to_lower(tabName))),
+                whitespace()
+            )
+        )
+    }) -> myTabPanel
+    
+    return(myTabPanel)
+    
+}
 
 ui <- fluidPage(
     
@@ -74,25 +101,12 @@ ui <- fluidPage(
     splitLayout(
         
         tabsetPanel(
-            ## Community Tab ------------------------------------------------
-            tabPanel("Community",
-                     fixedRow(
-                         column(4, makeNameInputs(tab = "community")),
-                         column(5, makeStatusInputs(tab = "community")),
-                         column(3, makeFeelingInputs(tab = "community")),
-                         whitespace()
-                         )
-                     ),
-            ## Dixipleship Tab ----------------------------------------------
-            tabPanel("Discipleship"),
-            ## Communal Worship Tab -----------------------------------------
-            tabPanel("Communal Worship"),
-            ## Sacraments Tab -----------------------------------------------
-            tabPanel("Sacraments"),
-            ## Evangelism Tab -----------------------------------------------
-            tabPanel("Evangelism"),
-            ## Prayer Tab ---------------------------------------------------
-            tabPanel("Prayer")
+            makeInputsTab("community"),
+            makeInputsTab("Discipleship"),
+            makeInputsTab("Communal Worship"),
+            makeInputsTab("Sacraments"),
+            makeInputsTab("Evangelism"),
+            makeInputsTab("Prayer")
         ),
         
         imageOutput("viz", width = "300px", height = "300px")
@@ -101,8 +115,20 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
+    ### Placeholder Graphics --------------------------------
     output$viz <- renderPlot(plot(1:50, 1:50))
     output$test <- renderPlot(plot(50:1, 1:50))
+    
+    ### Selectize Reactives
+    
+    userChoices <- reactiveValues(character())
+    
+    ### Watch all selectize inputs
+    
+    observeEvent({input$})
+    userChoices <- c(userChoices, )
+    
+    ### Render UI
     
 }
 
