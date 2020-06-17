@@ -18,7 +18,7 @@ makeNameInputs <- function(tab = NULL, rows = 5) {
     
     lapply(1:rows,
            function(number) {
-               textInput(inputId = paste0(str_replace_all(tab, "[:space:]", "-"),
+               textInput(inputId = paste0(str_replace_all(tab, "[:space:]", "_"),
                                           "_name_",
                                           as.character(number)),
                          label = {
@@ -39,7 +39,7 @@ makeStatusInputs <- function(tab = NULL, rows = 5, choices = statusChoices) {
         lapply(1:rows,
            function(number) {
                selectInput(inputId = paste0(
-                   str_replace_all(tab, "[:space:]", "-"),
+                   str_replace_all(tab, "[:space:]", "_"),
                    "_status_",
                    as.character(number)),
                          label = {
@@ -60,26 +60,23 @@ makeFeelingInputs <- function(tab = NULL, rows = 5) {
     # make list
     lapply(1:rows,
            function(number) {
-               selectizeInput(inputId = paste0(
-                   str_replace_all(tab, "[:space:]", "-"),
+               textInput(inputId = paste0(
+                   str_replace_all(tab, "[:space:]", "_"),
                    "_feeling_",
                    as.character(number)),
                            label = {
                                if(number == 1) "I feel:"
                                else NULL
-                           },
-                           choices = NULL,
-                           options = list(create = TRUE))
+                           })
            }) -> inputList
     
     return(inputList)
 }
 
 ### makeInputsGrid() generates the grid of all the inputs :::::::::::::::::::::
-makeInputsTab <- function(tabName) {
+makeInputsTab <- function(tabName, feelings) {
     stopifnot( is.character(tabName) )
     
-    renderUi({
         tabPanel(str_to_title(tabName),
                 fixedRow(
                 column(4, makeNameInputs(tab = str_to_lower(tabName))),
@@ -87,8 +84,7 @@ makeInputsTab <- function(tabName) {
                 column(3, makeFeelingInputs(tab = str_to_lower(tabName))),
                 whitespace()
             )
-        )
-    }) -> myTabPanel
+        ) -> myTabPanel
     
     return(myTabPanel)
     
@@ -101,19 +97,21 @@ ui <- fluidPage(
     splitLayout(
         
         tabsetPanel(
-            makeInputsTab("community"),
+            
+            makeInputsTab("Community"),
             makeInputsTab("Discipleship"),
             makeInputsTab("Communal Worship"),
             makeInputsTab("Sacraments"),
             makeInputsTab("Evangelism"),
+            makeInputsTab("Social Action"),
             makeInputsTab("Prayer")
-        ),
+        )
         
-        imageOutput("viz", width = "300px", height = "300px")
     ))
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+
 
     ### Placeholder Graphics --------------------------------
     output$viz <- renderPlot(plot(1:50, 1:50))
@@ -121,14 +119,7 @@ server <- function(input, output) {
     
     ### Selectize Reactives
     
-    userChoices <- reactiveValues(character())
-    
-    ### Watch all selectize inputs
-    
-    observeEvent({input$})
-    userChoices <- c(userChoices, )
-    
-    ### Render UI
+   
     
 }
 
