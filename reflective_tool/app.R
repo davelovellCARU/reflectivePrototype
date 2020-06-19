@@ -1,9 +1,12 @@
 library(shiny)
 library(stringr)
+library(tibble)
+library(dplyr)
 
 
 ## Variables -------------------------------------------------------------
 statusChoices <- c("started", "ended", "changed", "stayed the same")
+n_rows <- 5
 
 ## Functions ------------------------------------------------------------------
 ### whitespace() generates whitespace. A bit hacky but stops some ugliness:::::
@@ -79,9 +82,9 @@ makeInputsTab <- function(tabName, feelings) {
     
         tabPanel(str_to_title(tabName),
                 fixedRow(
-                column(4, makeNameInputs(tab = str_to_lower(tabName))),
-                column(5, makeStatusInputs(tab = str_to_lower(tabName))),
-                column(3, makeFeelingInputs(tab = str_to_lower(tabName))),
+                column(4, makeNameInputs(tab = str_to_lower(tabName), rows = n_rows)),
+                column(5, makeStatusInputs(tab = str_to_lower(tabName), rows = n_rows)),
+                column(3, makeFeelingInputs(tab = str_to_lower(tabName), rows = n_rows)),
                 whitespace()
             )
         ) -> myTabPanel
@@ -119,6 +122,26 @@ server <- function(input, output) {
     
     ### Selectize Reactives
     
+   vars <- reactiveValues()
+   
+   vars[["activities"]] <- tibble(
+       type = rep(
+           c("community",
+             "discipleship",
+             "communal_worship",
+             "sacraments",
+             "evangelism",
+             "social_action",
+             "prayer"),
+           n_rows
+           ),
+       number = rep(1:n_rows, 7),
+       activity = character(7 * n_rows),
+       status = factor(rep(NA, 7 * n_rows),
+                       levels = statusChoices),
+       feeling = character(7 * n_rows)) %>% 
+       arrange(type, number)
+   
    
     
 }
