@@ -2,6 +2,7 @@ library(shiny)
 library(stringr)
 library(tibble)
 library(dplyr)
+library(purrr)
 
 
 ### VARIABLES AND FUNCTIONS ####
@@ -79,6 +80,7 @@ makeInputsTab <- function(tabName, choices = NULL, values = NULL) {
 ui <- fluidPage(
     
     titlePanel("Reflecting on Change"),
+    verticalLayout(
     
     tabsetPanel(
        tabPanel("Community", makeInputsTab("Community")),
@@ -88,7 +90,11 @@ ui <- fluidPage(
        tabPanel("Evangelism", makeInputsTab("Evangelism")),
        tabPanel("Social Action", makeInputsTab("Social Action")),
        tabPanel("Prayer", makeInputsTab("Prayer"))
-            )
+            ),
+    
+    downloadButton("downloadData", "Download")
+    
+    )
     )
 
 server <- function(input, output) {
@@ -213,15 +219,21 @@ server <- function(input, output) {
              "prayer"),
            n_rows
            ),
-       number = rep(1:n_rows, 7),
-       # activity = character(7 * n_rows),
-       # status = factor(rep(NA, 7 * n_rows),
-       #                 levels = statusChoices),
-       # feeling = character(7 * n_rows)
-       activity = parse(
-          paste0("input$", type, "_name_", num)
-       )
-       ) %>% 
+       number = rep(1:n_rows, 7)) %>% 
+         mutate(activity = 
+                   map2_chr(type, number, ~ parse(text = paste0("input$", .x, "_name_", .y)) %>% 
+                           {.[[1]]} %>% 
+                           eval),
+                status = 
+                   map2_chr(type, number, ~ parse(text = paste0("input$", .x, "_status_", .y)) %>% 
+                               {.[[1]]} %>% 
+                               eval),
+                feeling = 
+                   map2_chr(type, number, ~ parse(text = paste0("input$", .x, "_feeling_", .y)) %>% 
+                               {.[[1]]} %>% 
+                               eval %>% 
+                               {if(is.null(.)) NA
+                                  else(.)})) %>%  
        arrange(type, number)})
    
    output$community <- renderUI({makeFeelingInputs("Community", choices = choice_added(), 
@@ -295,8 +307,11 @@ server <- function(input, output) {
    vars$community_feeling_4,
    vars$community_feeling_5))
       })
-   
 
+   output$downloadData <- downloadHandler(
+      filename = "activities.csv",
+      content = function(file) {write.csv(activities(), file, row.names = FALSE)}
+   )
     
 }
 
