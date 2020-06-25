@@ -1,8 +1,19 @@
-library(shiny)
-library(stringr)
-library(tibble)
-library(dplyr)
-library(purrr)
+library("shiny")
+library("stringr")
+library("dplyr")
+library("purrr")
+library("readr")
+library("here")
+library("magrittr")
+library("dplyr")
+library("tidyr")
+library("forcats")
+library("ggplot2")
+library("gganimate")
+library("carutools")
+library("Cairo")
+library("shinybusy")
+library("gifski")
 
 
 ### VARIABLES AND FUNCTIONS ####
@@ -23,13 +34,15 @@ makeNameInputs <- function(tab = NULL, rows = NULL) {
    
    lapply(1:rows,
           function(number) {
-             textInput(inputId = paste0(str_replace_all(tab, "[:space:]", "_"),
+             selectizeInput(inputId = paste0(str_replace_all(tab, "[:space:]", "_"),
                                         "_name_",
                                         as.character(number)),
                        label = {
                           if(number == 1) "Activity"
                           else NULL
-                       })
+                       },
+                       choices = NULL,
+                       options = list(create = TRUE))
           }) -> inputList
    
    return(inputList)
@@ -92,13 +105,20 @@ ui <- fluidPage(
        tabPanel("Prayer", makeInputsTab("Prayer"))
             ),
     
-    downloadButton("downloadData", "Download")
+    downloadButton("downloadData", "Download"),
+    textOutput("dev_commentary_2"),
+    actionButton("graphButton", "Make Graph"),
+    textOutput("dev_commentary"),
+    add_busy_spinner(spin = "fading-circle"),
+    imageOutput("vis")
     
     )
     )
 
 server <- function(input, output) {
    
+   output$dev_commentary_2 <- renderText("You can download a csv of your own responses. Not very useful, but it proves the concept.")
+   output$dev_commentary <- renderText("This takes about 2 minutes. But the beauty is that we can gift that time to the user for personal reflection.")
    ### makeFeelingInputs() generates input rows for the feelings colum :::::::::::
    makeFeelingInputs <- function(tab = NULL, rows = NULL, choices = NULL, values = NULL) {
       # Stop conditions
@@ -124,6 +144,40 @@ server <- function(input, output) {
       
       return(inputList)
    }
+   
+#### status_split used to reformat data when making visualisation ####
+   status_split <- function(statusValue) {
+      
+      statusValue %<>% as.character
+      
+      if (statusValue == "ended") {
+         beforeStatus <- "existent"
+         afterStatus <- "non-existent"
+      } else if (statusValue == "started") {
+         beforeStatus <- "non-existent"
+         afterStatus <- "non-existent"
+      } else if (statusValue == "stayed the same") {
+         beforeStatus <- "existent"
+         afterStatus <- "existent"
+      } else if (statusValue == "changed") {
+         beforeStatus <- "existent"
+         afterStatus <- "different"
+      } else {
+         # stop("Activity status must be one of: 'started', ended', 'changed' or 'stayed the same'")
+         NA
+      }
+      
+      statusTibble <- tibble(beforeStatus = beforeStatus,
+                             afterStatus = afterStatus) %>%
+         mutate(across(everything(),
+                       ~ factor(.,levels = rev(c("existent", "different", "non-existent")),
+                                ordered = TRUE)
+         ))
+      
+      return(statusTibble)
+      
+   }
+      
 
 ### Selectize Reactives
    vars <- reactiveValues()
@@ -313,6 +367,105 @@ server <- function(input, output) {
       content = function(file) {write.csv(activities(), file, row.names = FALSE)}
    )
     
+   ### Make the Graphic ####
+   
+   observeEvent(input$graphButton,
+                {
+                   visData <- isolate(activities())
+                   
+                   visData %<>% group_by(type, number, activity)
+                   visData %<>% rowwise
+                   visData %<>% summarise(status_split(status))
+                   visData %<>% ungroup
+                   
+                   visData %<>% pivot_longer(all_of(c("beforeStatus", "afterStatus")),
+                                             names_to = "time",
+                                             names_pattern = "(.*)(?=Status)",
+                                             values_to = "status",
+                                             names_transform = 
+                                                list(time = 
+                                                        ~ factor(., levels = c("before", "after"), 
+                                                                 ordered = TRUE)))
+                   
+                   visData %<>% group_by(type, time)
+                   visData %<>% summarise(existent = sum(status == "existent" & !is.na(activity)),
+                                          different = sum(status == "different" & !is.na(activity))) %>% 
+                      pivot_longer(all_of(c("existent", "different")),
+                                   names_to = "status",
+                                   values_to = "occurence")
+                   
+                   donutHole <- 0.5
+                   
+                   make_radial <- function(visData) {
+                      
+                      visData %<>% group_by(type, time)
+                      visData %<>% arrange(type, time, occurence)
+                      visData %>%
+                         mutate(
+                            occurence = 
+                               ### clever snippet gets heigths for big circle
+                               occurence %>% 
+                               {tmp <- sqrt(cumsum(c(donutHole, .)))
+                               tmp <- tmp - c(0, tmp[-length(tmp)])
+                               tmp[-1]})
+                   }
+                   
+                   visData %<>% make_radial
+                   
+                   visData %<>% mutate(type = 
+                                          type %>% 
+                                          str_replace_all("_", " ") %>% 
+                                          str_to_title())
+                   visData %<>% mutate(status = 
+                                          status %>% 
+                                          fct_recode("Consistent activity" = "existent", 
+                                                     "Modified activity" = "different"))
+                   visData %<>% rename("Activity status:" = "status")
+                   
+                   q <- ggplot(visData, aes(
+                      x = type,
+                      y = occurence
+                   )) +
+                      geom_bar(stat = "identity",
+                               position = "stack",
+                               width = 1.01,
+                               aes(group = paste0(type, `Activity status:`),
+                                   fill = `Activity status:`,
+                                   col = `Activity status:`)) +
+                      coord_polar(theta = "x") +
+                      theme_minimal() +
+                      scale_y_continuous(breaks = NULL, limits = c(- donutHole, NA)) +
+                      scale_fill_manual(values = rev(c(ct_darkteal(), ct_cyan()))) +
+                      scale_color_manual(values = rev(c(ct_darkteal(), ct_cyan()))) +
+                      xlab(NULL) +
+                      ylab(NULL) +
+                      theme(axis.text.x = element_text(size = 15,
+                                                       angle = 
+                                                          360 / (2 * pi) * seq(2 * pi - pi / 7, pi / 7, len = 7),
+                                                       hjust = 1),
+                            plot.title = element_text(size = 17),
+                            panel.grid = element_blank())
+                   
+                   anim <- q +
+                      transition_states(time,
+                                        transition_length = 2,
+                                        state_length = 5) +
+                      ease_aes("sine-in-out") +
+                      ggtitle("Activities {closest_state} lockdown")
+                   
+                   anim %<>% animate(nframes = 200, fps = 66, type = "cairo")
+                   
+                   output$vis <- renderImage({
+                      outfile <- tempfile(fileext = '.gif')
+                      
+                      anim_save("outfile.gif", anim)
+                      
+                      list(src = "outfile.gif",
+                           contentType = "image/gif")
+                   },
+                   
+                   deleteFile = TRUE)
+                })
 }
 
 # Run the application 
