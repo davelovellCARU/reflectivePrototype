@@ -9,11 +9,11 @@ library("dplyr")
 library("tidyr")
 library("forcats")
 library("ggplot2")
-# library("gganimate")
+library("gganimate")
 library("carutools")
-# library("Cairo")
-# library("shinybusy")
-# library("gifski")
+library("Cairo")
+library("shinybusy")
+library("gifski")
 
 
 ### VARIABLES AND FUNCTIONS ####
@@ -107,7 +107,10 @@ ui <- fluidPage(
     
     downloadButton("downloadData", "Download"),
     textOutput("dev_commentary_2"),
-    imageOutput("plot")
+    actionButton("graphButton", "Make Graph"),
+    textOutput("dev_commentary"),
+    add_busy_spinner(spin = "fading-circle"),
+    imageOutput("vis")
     
     )
     )
@@ -351,6 +354,18 @@ server <- function(input, output) {
    outputOptions(output, "evangelism", suspendWhenHidden = FALSE)
    outputOptions(output, "social_action", suspendWhenHidden = FALSE)
    outputOptions(output, "prayer", suspendWhenHidden = FALSE)
+   
+   output$debug <- renderText({toString(c(vars$community_feeling_1,
+   vars$community_feeling_2,
+   vars$community_feeling_3,
+   vars$community_feeling_4,
+   vars$community_feeling_5))
+      })
+
+   output$downloadData <- downloadHandler(
+      filename = "activities.csv",
+      content = function(file) {write.csv(activities(), file, row.names = FALSE)}
+   )
     
    ### Make the Graphic ####
    
@@ -429,11 +444,28 @@ server <- function(input, output) {
                                                           360 / (2 * pi) * seq(2 * pi - pi / 7, pi / 7, len = 7),
                                                        hjust = 1),
                             plot.title = element_text(size = 17),
-                            panel.grid = element_blank()) +
-                      facet_wrap(. ~ time)
+                            panel.grid = element_blank())
+                   
+                   anim <- q +
+                      transition_states(time,
+                                        transition_length = 2,
+                                        state_length = 5) +
+                      ease_aes("sine-in-out") +
+                      ggtitle("Activities {closest_state} lockdown")
+                   
+                   anim %<>% animate(nframes = 200, fps = 66, type = "cairo")
+                   
+                   output$vis <- renderImage({
+                      outfile <- tempfile(fileext = '.gif')
+                      
+                      anim_save("outfile.gif", anim)
+                      
+                      list(src = "outfile.gif",
+                           contentType = "image/gif")
+                   },
+                   
+                   deleteFile = TRUE)
                 })
-   
-   output$plot <- renderPlot({q})
 }
 
 # Run the application 
