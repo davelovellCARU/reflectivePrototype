@@ -355,13 +355,6 @@ server <- function(input, output) {
    outputOptions(output, "social_action", suspendWhenHidden = FALSE)
    outputOptions(output, "prayer", suspendWhenHidden = FALSE)
    
-   output$debug <- renderText({toString(c(vars$community_feeling_1,
-   vars$community_feeling_2,
-   vars$community_feeling_3,
-   vars$community_feeling_4,
-   vars$community_feeling_5))
-      })
-
    output$downloadData <- downloadHandler(
       filename = "activities.csv",
       content = function(file) {write.csv(activities(), file, row.names = FALSE)}
@@ -447,25 +440,7 @@ server <- function(input, output) {
                             panel.grid = element_blank()) +
                       facet_wrap(. ~ time)
                    
-                   # anim <- q +
-                   #    transition_states(time,
-                   #                      transition_length = 2,
-                   #                      state_length = 5) +
-                   #    ease_aes("sine-in-out") +
-                   #    ggtitle("Activities {closest_state} lockdown")
-                   
-                   # anim %<>% animate(nframes = 200, fps = 66, type = "cairo")
-                   
-                   output$vis <- renderPlot({
-                      q
-                      # outfile <- tempfile(fileext = '.gif')
-                      # 
-                      # anim_save("outfile.gif", anim)
-                      # 
-                      # list(src = "outfile.gif",
-                      #      contentType = "image/gif")
-                   }#, deleteFile = TRUE
-                   )
+                   output$vis <- renderPlot({q})
                 })
 }
 
