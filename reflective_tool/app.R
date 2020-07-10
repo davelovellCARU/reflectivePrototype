@@ -388,8 +388,8 @@ server <- function(input, output) {
                                                                  ordered = TRUE)))
                    
                    visData %<>% group_by(type, time)
-                   visData %<>% summarise(existent = sum(status == "existent" & !is.na(activity)),
-                                          different = sum(status == "different" & !is.na(activity))) %>% 
+                   visData %<>% summarise(existent = sum(status == "existent" & !is.na(activity) & activity != ""),
+                                          different = sum(status == "different" & !is.na(activity) & activity != "")) %>% 
                       pivot_longer(all_of(c("existent", "different")),
                                    names_to = "status",
                                    values_to = "occurence")
@@ -403,7 +403,7 @@ server <- function(input, output) {
                       visData %>%
                          mutate(
                             occurence = 
-                               ### clever snippet gets heigths for big circle
+                               ### clever snippet gets heights for big circle
                                occurence %>% 
                                {tmp <- sqrt(cumsum(c(donutHole, .)))
                                tmp <- tmp - c(0, tmp[-length(tmp)])
@@ -429,7 +429,7 @@ server <- function(input, output) {
                       geom_bar(stat = "identity",
                                position = "stack",
                                width = 1.01,
-                               aes(group = paste0(type, `Activity status:`),
+                               aes(group = `Activity status:`,
                                    fill = `Activity status:`,
                                    col = `Activity status:`)) +
                       coord_polar(theta = "x") +
