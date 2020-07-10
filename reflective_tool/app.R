@@ -444,27 +444,28 @@ server <- function(input, output) {
                                                           360 / (2 * pi) * seq(2 * pi - pi / 7, pi / 7, len = 7),
                                                        hjust = 1),
                             plot.title = element_text(size = 17),
-                            panel.grid = element_blank())
+                            panel.grid = element_blank()) +
+                      facet_wrap(. ~ time)
                    
-                   anim <- q +
-                      transition_states(time,
-                                        transition_length = 2,
-                                        state_length = 5) +
-                      ease_aes("sine-in-out") +
-                      ggtitle("Activities {closest_state} lockdown")
+                   # anim <- q +
+                   #    transition_states(time,
+                   #                      transition_length = 2,
+                   #                      state_length = 5) +
+                   #    ease_aes("sine-in-out") +
+                   #    ggtitle("Activities {closest_state} lockdown")
                    
-                   anim %<>% animate(nframes = 200, fps = 66, type = "cairo")
+                   # anim %<>% animate(nframes = 200, fps = 66, type = "cairo")
                    
-                   output$vis <- renderImage({
-                      outfile <- tempfile(fileext = '.gif')
-                      
-                      anim_save("outfile.gif", anim)
-                      
-                      list(src = "outfile.gif",
-                           contentType = "image/gif")
-                   },
-                   
-                   deleteFile = TRUE)
+                   output$vis <- renderPlot({
+                      q
+                      # outfile <- tempfile(fileext = '.gif')
+                      # 
+                      # anim_save("outfile.gif", anim)
+                      # 
+                      # list(src = "outfile.gif",
+                      #      contentType = "image/gif")
+                   }#, deleteFile = TRUE
+                   )
                 })
 }
 
