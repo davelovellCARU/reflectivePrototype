@@ -155,7 +155,7 @@ server <- function(input, output) {
          afterStatus <- "non-existent"
       } else if (statusValue == "started") {
          beforeStatus <- "non-existent"
-         afterStatus <- "existent"
+         afterStatus <- "new"
       } else if (statusValue == "stayed the same") {
          beforeStatus <- "existent"
          afterStatus <- "existent"
@@ -170,7 +170,7 @@ server <- function(input, output) {
       statusTibble <- tibble(beforeStatus = beforeStatus,
                              afterStatus = afterStatus) %>%
          mutate(across(everything(),
-                       ~ factor(.,levels = rev(c("existent", "different", "non-existent")),
+                       ~ factor(.,levels = rev(c("existent", "different", "new", "non-existent")),
                                 ordered = TRUE)
          ))
       
@@ -382,8 +382,10 @@ server <- function(input, output) {
                    
                    visData %<>% group_by(type, time)
                    visData %<>% summarise(existent = sum(status == "existent" & !is.na(activity) & activity != ""),
-                                          different = sum(status == "different" & !is.na(activity) & activity != "")) %>% 
-                      pivot_longer(all_of(c("existent", "different")),
+                                          different = sum(status == "different" & !is.na(activity) & activity != ""),
+                                          new = sum(status == "new" & !is.na(activity) & activity != ""), 
+                                          non_existent = sum(status == "non-existent" & !is.na(activity) & activity != "")) %>% 
+                      pivot_longer(all_of(c("existent", "different", "non_existent", "new")),
                                    names_to = "status",
                                    values_to = "occurence")
                    
@@ -392,7 +394,7 @@ server <- function(input, output) {
                    make_radial <- function(visData) {
                       
                       visData %<>% group_by(type, time)
-                      visData %<>% arrange(type, time, occurence)
+                      visData %<>% arrange(status)
                       visData %>%
                          mutate(
                             occurence = 
@@ -411,9 +413,18 @@ server <- function(input, output) {
                                           str_to_title())
                    visData %<>% mutate(status = 
                                           status %>% 
-                                          fct_recode("Consistent activity" = "existent", 
-                                                     "Modified activity" = "different"))
+                                          fct_recode("Stayed the same" = "existent", 
+                                                     "Changed" = "different",
+                                                     "Ended" = "non_existent",
+                                                     "New" = "new") %>% 
+                                          fct_relevel(rev(
+                                             c("Stayed the same",
+                                               "Changed",
+                                               "New",
+                                               "Ended")
+                                             )))
                    visData %<>% rename("Activity status:" = "status")
+                   visData %<>% filter(time == "after")
                    
                    q <- ggplot(visData, aes(
                       x = type,
@@ -424,12 +435,23 @@ server <- function(input, output) {
                                width = 1.01,
                                aes(group = `Activity status:`,
                                    fill = `Activity status:`,
-                                   col = NULL)) +
+                                   col = `Activity status:`,
+                                   alpha = `Activity status:`)) +
                       coord_polar(theta = "x") +
                       theme_minimal() +
                       scale_y_continuous(breaks = NULL, limits = c(- donutHole, NA)) +
-                      scale_fill_manual(values = rev(c(ct_darkteal(), ct_cyan()))) +
-                      scale_color_manual(values = rev(c(ct_darkteal(), ct_cyan()))) +
+                      scale_fill_manual(values = c("Stayed the same" = ct_darkteal(),
+                                                   "Changed" = ct_cyan(),
+                                                   "New" = ct_purple(),
+                                                   "Ended" = NA)) +
+                      scale_color_manual(values = c("Stayed the same" = NA,
+                                                    "Changed" = NA,
+                                                    "New" = NA,
+                                                    "Ended" = "grey")) +
+                      scale_alpha_manual(values = c("Stayed the same" = 1,
+                                                    "Changed" = 1,
+                                                    "New" = 1, 
+                                                    "Ended" = 0.05)) +
                       xlab(NULL) +
                       ylab(NULL) +
                       theme(axis.text.x = element_text(size = 15,
@@ -437,8 +459,7 @@ server <- function(input, output) {
                                                           360 / (2 * pi) * seq(2 * pi - pi / 7, pi / 7, len = 7),
                                                        hjust = 1),
                             plot.title = element_text(size = 17),
-                            panel.grid = element_blank()) +
-                      facet_wrap(. ~ time)
+                            panel.grid = element_blank())
                    
                    output$vis <- renderPlot({q})
                 })
