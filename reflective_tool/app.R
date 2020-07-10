@@ -155,7 +155,7 @@ server <- function(input, output) {
          afterStatus <- "non-existent"
       } else if (statusValue == "started") {
          beforeStatus <- "non-existent"
-         afterStatus <- "non-existent"
+         afterStatus <- "existent"
       } else if (statusValue == "stayed the same") {
          beforeStatus <- "existent"
          afterStatus <- "existent"
