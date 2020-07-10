@@ -78,7 +78,7 @@ makeInputsTab <- function(tabName, choices = NULL, values = NULL) {
             fixedRow(
                column(4, makeNameInputs(tab = str_to_lower(tabName), rows = n_rows)),
                column(5, makeStatusInputs(tab = str_to_lower(tabName), rows = n_rows)),
-               column(3, uiOutput(tabName %>% str_to_lower %>% str_replace_all("[:space:]", "_")) ),
+               # column(3, uiOutput(tabName %>% str_to_lower %>% str_replace_all("[:space:]", "_")) ),
                # column(3, makeFeelingInputs(tab = str_to_lower(tabName), rows = n_rows, choices = choices, values = values)),
                whitespace()
             # )
@@ -424,7 +424,7 @@ server <- function(input, output) {
                                width = 1.01,
                                aes(group = `Activity status:`,
                                    fill = `Activity status:`,
-                                   col = `Activity status:`)) +
+                                   col = NULL)) +
                       coord_polar(theta = "x") +
                       theme_minimal() +
                       scale_y_continuous(breaks = NULL, limits = c(- donutHole, NA)) +
