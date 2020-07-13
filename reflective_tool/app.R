@@ -1,4 +1,5 @@
 library("shiny")
+library("shinythemes")
 library("stringr")
 library("dplyr")
 library("purrr")
@@ -91,8 +92,16 @@ makeInputsTab <- function(tabName, choices = NULL, values = NULL) {
 
 
 ui <- fluidPage(
+   theme = shinytheme("lumen"),
     
-    titlePanel("Reflecting on Change"),
+    titlePanel("Hello"),
+   # h1("Hello"),
+   p("Church Army think that you're probably one of the leading experts on your own missional context. That's why we've built this reflective tool."),
+   p("As a result of the lockdown, some aspects of your ministry might have changed drastically. Some things may have stayed the same, and other things might have stopped altogether. It may even be that some entirely new things have begun.
+     In the tables below, we use these basic categories (started, stopped, changed, stayed the same) to help you to build up a picture of what's happened in your context.
+     Additionally, we've divided the entry fields into seven broadly defined aspects of ministry: Community, Discipleship, Communal Worship, Sacraments, Evangelism, Social Action and Prayer. If you're not sure which one of these aspects describes a particular activity, just put it where you think it fits best."),
+   p("Filling in the tables below might only take five minutes, but we recommend going slowly; Revisiting these areas of change may be an opportune time to reflect, pray or even grieve."),
+   p("When you've finished updating the activity tables, you can press the 'Show me my Graph' button to see a graph of your responses. There's a lot that numbers can't capture, so your graph will only tell part of the story. Nevertheless, we hope that a visual overview of the 'shape' of change might grant you another perspective on your experience."),
     verticalLayout(
     
     tabsetPanel(
@@ -105,10 +114,11 @@ ui <- fluidPage(
        tabPanel("Prayer", makeInputsTab("Prayer"))
             ),
     
-    downloadButton("downloadData", "Download"),
-    textOutput("dev_commentary_2"),
-    actionButton("graphButton", "Make Graph"),
-    textOutput("dev_commentary"),
+    # Download Button ------------------------- 
+    # downloadButton("downloadData", "Download"),
+    # textOutput("dev_commentary_2"),
+    
+    actionButton("graphButton", "Show me my Graph"),
     add_busy_spinner(spin = "fading-circle"),
     imageOutput("vis")
     
@@ -149,6 +159,7 @@ server <- function(input, output) {
    status_split <- function(statusValue) {
       
       statusValue %<>% as.character
+      statusValue %<>% str_to_lower()
       
       if (statusValue == "ended") {
          beforeStatus <- "existent"
@@ -367,7 +378,6 @@ server <- function(input, output) {
                    visData <- isolate(activities())
                    
                    visData %<>% group_by(type, number, activity)
-                   visData %<>% rowwise
                    visData %<>% summarise(status_split(status))
                    visData %<>% ungroup
                    
@@ -426,32 +436,43 @@ server <- function(input, output) {
                    visData %<>% rename("Activity status:" = "status")
                    visData %<>% filter(time == "after")
                    
+                   ### Remove zero-count 'ended's (remove empty 'outline' box in plot)
+                   visData %<>% mutate(occurence = 
+                                          replace(occurence, occurence == 0, NA))
+                   
                    q <- ggplot(visData, aes(
                       x = type,
                       y = occurence
                    )) +
                       geom_bar(stat = "identity",
                                position = "stack",
-                               width = 1.01,
+                               width = 1,
+                               col = "black",
                                aes(group = `Activity status:`,
                                    fill = `Activity status:`,
-                                   col = `Activity status:`,
-                                   alpha = `Activity status:`)) +
+                                   # col = `Activity status:`,
+                                   linetype = `Activity status:`,
+                                   size = `Activity status:`)) +
                       coord_polar(theta = "x") +
                       theme_minimal() +
                       scale_y_continuous(breaks = NULL, limits = c(- donutHole, NA)) +
                       scale_fill_manual(values = c("Stayed the same" = ct_darkteal(),
                                                    "Changed" = ct_cyan(),
                                                    "New" = ct_purple(),
-                                                   "Ended" = NA)) +
-                      scale_color_manual(values = c("Stayed the same" = NA,
-                                                    "Changed" = NA,
-                                                    "New" = NA,
-                                                    "Ended" = "grey")) +
-                      scale_alpha_manual(values = c("Stayed the same" = 1,
-                                                    "Changed" = 1,
-                                                    "New" = 1, 
-                                                    "Ended" = 0.05)) +
+                                                   "Ended" = NA),
+                                        na.translate = FALSE) +
+                      # scale_color_manual(values = c("Stayed the same" = "black",
+                      #                               "Changed" = "black",
+                      #                               "New" = "black",
+                      #                               "Ended" = alpha("grey", .7))) +
+                      scale_linetype_manual(values = c("Stayed the same" = "solid",
+                                                       "Changed" = "solid",
+                                                       "New" = "solid",
+                                                       "Ended" = "dotted")) +
+                      scale_size_manual(values = c("Stayed the same" = .6,
+                                                       "Changed" = .6,
+                                                       "New" = .6,
+                                                       "Ended" = .4)) +
                       xlab(NULL) +
                       ylab(NULL) +
                       theme(axis.text.x = element_text(size = 15,
