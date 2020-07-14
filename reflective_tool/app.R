@@ -105,7 +105,7 @@ ui <- fluidPage(
     verticalLayout(
     
     tabsetPanel(
-       tabPanel("Community", makeInputsTab("Community")),
+       tabPanel("Community Activities", makeInputsTab("Community Activities")),
        tabPanel("Discipleship", makeInputsTab("Discipleship")),
        tabPanel("Communal Worship", makeInputsTab("Communal Worship")),
        tabPanel("Sacraments", makeInputsTab("Sacraments")),
@@ -208,16 +208,16 @@ server <- function(input, output) {
        vars$userChoices <- c(vars$userChoices, input$communal_worship_feeling_4) %>% unique})
    observeEvent(input$communal_worship_feeling_5, {
        vars$userChoices <- c(vars$userChoices, input$communal_worship_feeling_5) %>% unique})
-   observeEvent(input$community_feeling_1, {
-       vars$userChoices <- c(vars$userChoices, input$community_feeling_1) %>% unique})
-   observeEvent(input$community_feeling_2, {
-       vars$userChoices <- c(vars$userChoices, input$community_feeling_2) %>% unique})
-   observeEvent(input$community_feeling_3, {
-       vars$userChoices <- c(vars$userChoices, input$community_feeling_3) %>% unique})
-   observeEvent(input$community_feeling_4, {
-       vars$userChoices <- c(vars$userChoices, input$community_feeling_4) %>% unique})
-   observeEvent(input$community_feeling_5, {
-       vars$userChoices <- c(vars$userChoices, input$community_feeling_5) %>% unique})
+   observeEvent(input$community_activities_feeling_1, {
+       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_1) %>% unique})
+   observeEvent(input$community_activities_feeling_2, {
+       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_2) %>% unique})
+   observeEvent(input$community_activities_feeling_3, {
+       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_3) %>% unique})
+   observeEvent(input$community_activities_feeling_4, {
+       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_4) %>% unique})
+   observeEvent(input$community_activities_feeling_5, {
+       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_5) %>% unique})
    observeEvent(input$discipleship_feeling_1, {
        vars$userChoices <- c(vars$userChoices, input$discipleship_feeling_1) %>% unique})
    observeEvent(input$discipleship_feeling_2, {
@@ -275,7 +275,7 @@ server <- function(input, output) {
   ### Activities Tibble ###### 
    activities <- reactive({tibble(
        type = rep(
-           c("community",
+           c("community_activities",
              "discipleship",
              "communal_worship",
              "sacraments",
@@ -301,13 +301,13 @@ server <- function(input, output) {
                                   else(.)})) %>%  
        arrange(type, number)})
    
-   output$community <- renderUI({makeFeelingInputs("Community", choices = choice_added(), 
+   output$community_activities <- renderUI({makeFeelingInputs("Community Activities", choices = choice_added(), 
                                                values = c(
-                                                   input$community_feeling_1,
-                                                   input$community_feeling_2,
-                                                   input$community_feeling_3,
-                                                   input$community_feeling_4,
-                                                   input$community_feeling_5
+                                                   input$community_activities_feeling_1,
+                                                   input$community_activities_feeling_2,
+                                                   input$community_activities_feeling_3,
+                                                   input$community_activities_feeling_4,
+                                                   input$community_activities_feeling_5
                                                ), rows = n_rows)})
    output$discipleship <- renderUI({makeFeelingInputs("Discipleship", choices = choice_added(),
                                                   values = c(
@@ -358,7 +358,7 @@ server <- function(input, output) {
                                                 input$prayer_feeling_5
                                             ), rows = n_rows)})
    
-   outputOptions(output, "community", suspendWhenHidden = FALSE)
+   outputOptions(output, "community_activities", suspendWhenHidden = FALSE)
    outputOptions(output, "discipleship", suspendWhenHidden = FALSE)
    outputOptions(output, "communal_worship", suspendWhenHidden = FALSE)
    outputOptions(output, "sacraments", suspendWhenHidden = FALSE)
