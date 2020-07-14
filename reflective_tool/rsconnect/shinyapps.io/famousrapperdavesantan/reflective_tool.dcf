@@ -5,9 +5,9 @@ account: famousrapperdavesantan
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2493484
-bundleId: 3386015
+bundleId: 3386108
 url: https://famousrapperdavesantan.shinyapps.io/reflective_tool/
-when: 1594647785.39467
+when: 1594648987.05306
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: activities.csv|activities.rdat|usefulbits.R|reprex/app.R
