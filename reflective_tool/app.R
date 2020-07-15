@@ -461,10 +461,6 @@ server <- function(input, output) {
                                                    "New" = ct_purple(),
                                                    "Ended" = NA),
                                         na.translate = FALSE) +
-                      # scale_color_manual(values = c("Stayed the same" = "black",
-                      #                               "Changed" = "black",
-                      #                               "New" = "black",
-                      #                               "Ended" = alpha("grey", .7))) +
                       scale_linetype_manual(values = c("Stayed the same" = "solid",
                                                        "Changed" = "solid",
                                                        "New" = "solid",
