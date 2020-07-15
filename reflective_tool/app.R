@@ -42,7 +42,19 @@ makeNameInputs <- function(tab = NULL, rows = NULL) {
                           if(number == 1) "Activity"
                           else NULL
                        },
-                       choices = NULL,
+                       choices = 
+                          if(number == 1){
+                           case_when(
+                           str_detect(tab, "communal worship") ~ "Congregational  singing",
+                           str_detect(tab, "community activities") ~ "Board games night",
+                           str_detect(tab, "discipleship") ~ "Student one-to-ones",
+                           str_detect(tab, "evangelism") ~ "Board games night",
+                           str_detect(tab, "prayer") ~ "Wednesday morning prayer meeting",
+                           str_detect(tab, "sacraments") ~ "Sunday morning communion",
+                           str_detect(tab, "social action") ~ "Food bank volunteering",
+                           TRUE ~ ""
+                              )
+                             },
                        options = list(create = TRUE))
           }) -> inputList
    
@@ -95,7 +107,6 @@ ui <- fluidPage(
    theme = shinytheme("lumen"),
     
     titlePanel("Hello"),
-   # h1("Hello"),
    p("Church Army think that you're probably one of the leading experts on your own missional context. That's why we've built this reflective tool."),
    p("As a result of the lockdown, some aspects of your ministry might have changed drastically. Some things may have stayed the same, and other things might have stopped altogether. It may even be that some entirely new things have begun.
      In the tables below, we use these basic categories (started, stopped, changed, stayed the same) to help you to build up a picture of what's happened in your context.
