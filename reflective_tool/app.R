@@ -16,7 +16,6 @@ library("Cairo")
 library("shinybusy")
 library("gifski")
 
-
 ### VARIABLES AND FUNCTIONS ####
 ## Variables -------------------------------------------------------------
 statusChoices <- c("started", "ended", "changed", "stayed the same")
@@ -131,7 +130,12 @@ ui <- fluidPage(
     
     actionButton("graphButton", "Show me my Graph"),
     add_busy_spinner(spin = "fading-circle"),
-    imageOutput("vis")
+    imageOutput("vis"),
+    p("For testing purposes:"),
+    selectInput(inputId = "sameColour", "Same:", choices =  c("transparent", "black", "white", ct_all_cols(with.names = TRUE) %>% names)),
+    selectInput("changeColour", "Changed:", choices =  c("transparent", "black", "white", ct_all_cols(with.names = TRUE) %>% names)),
+    selectInput("newColour", "New:", choices =  c("transparent", "black", "white", ct_all_cols(with.names = TRUE) %>% names)),
+    selectInput("endColour", "Ended:", choices =  c("transparent", "black", "white", ct_all_cols(with.names = TRUE) %>% names))
     
     )
     )
@@ -384,7 +388,18 @@ server <- function(input, output) {
     
    ### Make the Graphic ####
    
-   observeEvent(input$graphButton,
+   listener <- reactive({
+      list(
+         input$graphButton,
+         input$sameColour,
+         input$changeColour,
+         input$newColour,
+         input$endColour
+      )
+   })
+   
+   
+   observeEvent(listener(),
                 {
                    visData <- isolate(activities())
                    
@@ -451,6 +466,10 @@ server <- function(input, output) {
                    visData %<>% mutate(occurence = 
                                           replace(occurence, occurence == 0, NA))
                    
+                   #### Colours Stuff ####
+                  
+                   allCols <- c(ct_all_cols(with.names = TRUE), "black" = "black", "white" = "white", "transparent" = NA)
+                   
                    q <- ggplot(visData, aes(
                       x = type,
                       y = occurence
@@ -468,11 +487,10 @@ server <- function(input, output) {
                       theme_minimal() +
                       scale_y_continuous(breaks = NULL, limits = c(- donutHole, NA)) +
                       scale_x_discrete(labels = function(kek) str_replace_all(kek,"[:space:]", "\n")) +
-                      scale_fill_manual(values = c("Stayed the same" = ct_darkteal(),
-                                                   "Changed" = ct_cyan(),
-                                                   "New" = ct_purple(),
-                                                   "Ended" = NA),
-                                        na.translate = FALSE) +
+                      scale_fill_manual(values = c("Stayed the same" = allCols[[input$newColour]],
+                                                   "Changed" = allCols[[input$changeColour]],
+                                                   "New" = allCols[[input$newColour]],
+                                                   "Ended" = allCols[[input$endColour]])) +
                       scale_linetype_manual(values = c("Stayed the same" = "solid",
                                                        "Changed" = "solid",
                                                        "New" = "solid",
