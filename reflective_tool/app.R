@@ -456,6 +456,7 @@ server <- function(input, output) {
                       coord_polar(theta = "x") +
                       theme_minimal() +
                       scale_y_continuous(breaks = NULL, limits = c(- donutHole, NA)) +
+                      scale_x_discrete(labels = function(kek) str_replace_all(kek,"[:space:]", "\n")) +
                       scale_fill_manual(values = c("Stayed the same" = ct_darkteal(),
                                                    "Changed" = ct_cyan(),
                                                    "New" = ct_purple(),
