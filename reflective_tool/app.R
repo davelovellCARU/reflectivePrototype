@@ -480,10 +480,12 @@ server <- function(input, output) {
                                                           360 / (2 * pi) * seq(2 * pi - pi / 7, pi / 7, len = 7),
                                                        hjust = 1),
                             plot.title = element_text(size = 17),
-                            panel.grid = element_blank()) +
-                      annotate("text", x = 1,  y = -.5, label = "Church\nArmy",
-                               hjust=1.1, vjust=-1.1, col="black", cex=4,
-                               fontface = "bold", alpha = 0.8)
+                            panel.grid = element_blank(),
+                            plot.caption = element_text(size = 10, colour = "grey45")) +
+                      labs(caption = "Church Army")
+                      # annotate("text", x = 1,  y = -.5, label = "Church\nArmy",
+                      #          hjust=1.1, vjust=-1.1, col="black", cex=4,
+                      #          fontface = "bold", alpha = 0.8)
                    
                    output$vis <- renderPlot({q})
                 })
