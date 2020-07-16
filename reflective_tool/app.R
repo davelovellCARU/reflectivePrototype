@@ -107,12 +107,7 @@ ui <- fluidPage(
    theme = shinytheme("lumen"),
     
     titlePanel("Hello"),
-   p("Church Army think that you're probably one of the leading experts on your own missional context. That's why we've built this reflective tool."),
-   p("As a result of the lockdown, some aspects of your ministry might have changed drastically. Some things may have stayed the same, and other things might have stopped altogether. It may even be that some entirely new things have begun.
-     In the tables below, we use these basic categories (started, stopped, changed, stayed the same) to help you to build up a picture of what's happened in your context.
-     Additionally, we've divided the entry fields into seven broadly defined aspects of ministry: Community, Discipleship, Communal Worship, Sacraments, Evangelism, Social Action and Prayer. If you're not sure which one of these aspects describes a particular activity, just put it where you think it fits best."),
-   p("Filling in the tables below might only take five minutes, but we recommend going slowly; Revisiting these areas of change may be an opportune time to reflect, pray or even grieve."),
-   p("When you've finished updating the activity tables, you can press the 'Show me my Graph' button to see a graph of your responses. There's a lot that numbers can't capture, so your graph will only tell part of the story. Nevertheless, we hope that a visual overview of the 'shape' of change might grant you another perspective on your experience."),
+   includeMarkdown("introduction.md"),
     verticalLayout(
     
     tabsetPanel(
