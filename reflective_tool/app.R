@@ -53,7 +53,40 @@ makeNameInputs <- function(tab = NULL, rows = NULL) {
                            str_detect(tab, "social action") ~ "Food bank volunteering",
                            TRUE ~ ""
                               )
-                             },
+                             } else if(number == 2){
+                                case_when(
+                                   str_detect(tab, "communal worship") ~ "sample_text",
+                                   str_detect(tab, "community activities") ~ "sample_text",
+                                   str_detect(tab, "discipleship") ~ "",
+                                   str_detect(tab, "evangelism") ~ "sample_text",
+                                   str_detect(tab, "prayer") ~ "",
+                                   str_detect(tab, "sacraments") ~ "",
+                                   str_detect(tab, "social action") ~ "",
+                                   TRUE ~ ""
+                                )
+                             } else if(number == 3){
+                                case_when(
+                                   str_detect(tab, "communal worship") ~ "sample_text",
+                                   str_detect(tab, "community activities") ~ "sample_text",
+                                   str_detect(tab, "discipleship") ~ "",
+                                   str_detect(tab, "evangelism") ~ "",
+                                   str_detect(tab, "prayer") ~ "",
+                                   str_detect(tab, "sacraments") ~ "",
+                                   str_detect(tab, "social action") ~ "",
+                                   TRUE ~ ""
+                                )
+                                } else if(number == 4){
+                                   case_when(
+                                      str_detect(tab, "communal worship") ~ "sample_text",
+                                      str_detect(tab, "community activities") ~ "",
+                                      str_detect(tab, "discipleship") ~ "",
+                                      str_detect(tab, "evangelism") ~ "",
+                                      str_detect(tab, "prayer") ~ "",
+                                      str_detect(tab, "sacraments") ~ "",
+                                      str_detect(tab, "social action") ~ "",
+                                      TRUE ~ ""
+                                   )
+                                },
                        options = list(create = TRUE))
           }) -> inputList
    
@@ -76,7 +109,62 @@ makeStatusInputs <- function(tab = NULL, rows = NULL, choices = statusChoices) {
                    if(number == 1) "This activity has:"
                    else NULL
                 },
-                choices = statusChoices)
+                choices = choices, 
+                selected = 
+                   if(number == 1){
+                      case_when(
+                         str_detect(tab, "communal worship") ~ "started",
+                         str_detect(tab, "community activities") ~ "ended",
+                         str_detect(tab, "discipleship") ~ "changed",
+                         str_detect(tab, "evangelism") ~ "stayed the same",
+                         str_detect(tab, "prayer") ~ "stayed the same",
+                         str_detect(tab, "sacraments") ~ "ended",
+                         str_detect(tab, "social action") ~ "changed",
+                         TRUE ~ "started"
+                      )
+                   } else if(number == 2){
+                      case_when(
+                         str_detect(tab, "communal worship") ~ "ended",
+                         str_detect(tab, "community activities") ~ "changed",
+                         str_detect(tab, "discipleship") ~ "started",
+                         str_detect(tab, "evangelism") ~ "started",
+                         str_detect(tab, "prayer") ~ "started",
+                         str_detect(tab, "sacraments") ~ "started",
+                         str_detect(tab, "social action") ~ "started",
+                         TRUE ~ "started"
+                      )
+                   } else if(number == 3){
+                      case_when(
+                         str_detect(tab, "communal worship") ~ "stayed the same",
+                         str_detect(tab, "community activities") ~ "stayed the same",
+                         str_detect(tab, "discipleship") ~ "started",
+                         str_detect(tab, "evangelism") ~ "started",
+                         str_detect(tab, "prayer") ~ "started",
+                         str_detect(tab, "sacraments") ~ "started",
+                         str_detect(tab, "social action") ~ "started",
+                         TRUE ~ "started"
+                      )
+                   } else if(number == 4){
+                      case_when(
+                         str_detect(tab, "communal worship") ~ "changed",
+                         str_detect(tab, "community activities") ~ "started",
+                         str_detect(tab, "discipleship") ~ "started",
+                         str_detect(tab, "evangelism") ~ "started",
+                         str_detect(tab, "prayer") ~ "started",
+                         str_detect(tab, "sacraments") ~ "started",
+                         str_detect(tab, "social action") ~ "started",
+                         TRUE ~ "started"
+                      )}else if(number == 5){
+                         case_when(
+                            str_detect(tab, "communal worship") ~ "changed",
+                            str_detect(tab, "community activities") ~ "started",
+                            str_detect(tab, "discipleship") ~ "started",
+                            str_detect(tab, "evangelism") ~ "started",
+                            str_detect(tab, "prayer") ~ "started",
+                            str_detect(tab, "sacraments") ~ "started",
+                            str_detect(tab, "social action") ~ "started",
+                            TRUE ~ "started"
+                         )})
           }) -> inputList
    
    return(inputList)
@@ -132,10 +220,10 @@ ui <- fluidPage(
     add_busy_spinner(spin = "fading-circle"),
     imageOutput("vis"),
     p("For testing purposes:"),
-    selectInput(inputId = "sameColour", "Same:", choices =  c("transparent", "black", "white", ct_all_cols(with.names = TRUE) %>% names)),
-    selectInput("changeColour", "Changed:", choices =  c("transparent", "black", "white", ct_all_cols(with.names = TRUE) %>% names)),
-    selectInput("newColour", "New:", choices =  c("transparent", "black", "white", ct_all_cols(with.names = TRUE) %>% names)),
-    selectInput("endColour", "Ended:", choices =  c("transparent", "black", "white", ct_all_cols(with.names = TRUE) %>% names))
+    selectInput(inputId = "sameColour", "Same:", choices =  c("transparent", "black", "white", ct_all_cols(with.names = TRUE) %>% names), selected = "darkteal"),
+    selectInput("changeColour", "Changed:", choices =  c("transparent", "black", "white", ct_all_cols(with.names = TRUE) %>% names), selected = "cyan"),
+    selectInput("newColour", "New:", choices =  c("transparent", "black", "white", ct_all_cols(with.names = TRUE) %>% names), selected = "purple"),
+    selectInput("endColour", "Ended:", choices =  c("transparent", "black", "white", ct_all_cols(with.names = TRUE) %>% names), selected = "transparent")
     
     )
     )
