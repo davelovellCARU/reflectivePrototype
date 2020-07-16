@@ -411,12 +411,32 @@ server <- function(input, output) {
                                    values_to = "occurence")
                    
                    donutHole <- 0.5
+
+                   visData %<>% filter(time == "after")
                    
                    make_radial <- function(visData) {
                       
-                      visData %<>% group_by(type, time)
-                      visData %<>% arrange(status)
-                      visData %>%
+                      visData %<>% mutate(status = 
+                                             status %>% 
+                                             fct_recode("Stayed the same" = "existent", 
+                                                        "Changed" = "different",
+                                                        "Ended" = "non_existent",
+                                                        "New" = "new") %>% 
+                                             fct_relevel(rev(
+                                                c("Stayed the same",
+                                                  "Changed",
+                                                  "New",
+                                                  "Ended")
+                                             )))
+                      
+                      visData %<>% group_by(type)
+                      
+                      # Temporary variable for arranging by factor level
+                      visData %<>% mutate(statLevels = as.numeric(status))
+                      
+                      visData %<>% arrange(desc(statLevels), by_group = TRUE)
+                      
+                      visData %<>%
                          mutate(
                             occurence = 
                                ### clever snippet gets heights for big circle
@@ -424,28 +444,19 @@ server <- function(input, output) {
                                {tmp <- sqrt(cumsum(c(donutHole, .)))
                                tmp <- tmp - c(0, tmp[-length(tmp)])
                                tmp[-1]})
+                      return(visData)
                    }
-                   
+
                    visData %<>% make_radial
+                   
+                   
+                   
+                   visData %<>% rename("Activity status:" = "status")
                    
                    visData %<>% mutate(type = 
                                           type %>% 
                                           str_replace_all("_", " ") %>% 
                                           str_to_title())
-                   visData %<>% mutate(status = 
-                                          status %>% 
-                                          fct_recode("Stayed the same" = "existent", 
-                                                     "Changed" = "different",
-                                                     "Ended" = "non_existent",
-                                                     "New" = "new") %>% 
-                                          fct_relevel(rev(
-                                             c("Stayed the same",
-                                               "Changed",
-                                               "New",
-                                               "Ended")
-                                             )))
-                   visData %<>% rename("Activity status:" = "status")
-                   visData %<>% filter(time == "after")
                    
                    ### Remove zero-count 'ended's (remove empty 'outline' box in plot)
                    visData %<>% mutate(occurence = 
