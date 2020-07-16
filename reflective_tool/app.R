@@ -575,7 +575,7 @@ server <- function(input, output) {
                       theme_minimal() +
                       scale_y_continuous(breaks = NULL, limits = c(- donutHole, NA)) +
                       scale_x_discrete(labels = function(kek) str_replace_all(kek,"[:space:]", "\n")) +
-                      scale_fill_manual(values = c("Stayed the same" = allCols[[input$newColour]],
+                      scale_fill_manual(values = c("Stayed the same" = allCols[[input$sameColour]],
                                                    "Changed" = allCols[[input$changeColour]],
                                                    "New" = allCols[[input$newColour]],
                                                    "Ended" = allCols[[input$endColour]])) +
