@@ -17,6 +17,7 @@ library("shinybusy")
 library("gifski")
 library("httr")
 library("rtweet")
+library("markdown")
 
 
 ### VARIABLES AND FUNCTIONS ####
@@ -102,14 +103,59 @@ makeInputsTab <- function(tabName, choices = NULL, values = NULL) {
    return(myTabPanel)
 }
 
+#### Twitter Oath stuff
+
+keys <- list(
+   consumerKey = read.table("credentials/twitter_consumer_key.txt")[[1,1]],
+   consumerSecret = read.table(file = "credentials/twitter_consumer_secret.txt")[[1,1]]
+)
 app <- 
    oauth_app(
       app = "Church Army's Reflective Tool",
-      key = read.table(file = "reflective_tool/credentials/twitter_consumer_key.txt")[[1,1]],
-      secret = read.table(file = "reflective_tool/credentials/twitter_consumer_secret.txt")[[1,1]]
+      key = keys$consumerKey,
+      secret = keys$consumerSecret
    )
 
+oauth_sig <- function(url, method, token = NULL, token_secret = NULL, private_key = NULL, ...){
+   httr::oauth_header(
+      httr::oauth_signature(url, 
+                            method,
+                            app,
+                            token,
+                            token_secret, 
+                            private_key,
+                            other_params = list(...)))
+} # Stole this from JN: https://medium.com/@skyetetra/how-to-make-rtweet-r-shiny-apps-with-user-credentials-48acca246b58
 
+get_authorization_url <- 
+   function(app, callback_url, permission=NULL){
+      private_key <- NULL
+      
+      response <- 
+         httr::POST(
+            "https://api.twitter.com/oauth/request_token",
+            oauth_sig(
+               "https://api.twitter.com/oauth/request_token",
+               "POST", 
+               private_key = NULL,
+               oauth_callback = callback_url)
+         )
+      
+      httr::stop_for_status(response)
+      
+      params <- 
+         httr::content(
+            response, 
+            type = "application/x-www-form-urlencoded")
+      authorize_url <- 
+         httr::modify_url(
+            "https://api.twitter.com/oauth/authenticate",
+            query = list(oauth_token = params$oauth_token, 
+                         permission = permission))
+      authorize_url 
+   } # also stole this lol
+
+url <- get_authorization_url(app, "https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/")
 
 ui <- fluidPage(
    theme = shinytheme("lumen"),
@@ -127,20 +173,70 @@ ui <- fluidPage(
        tabPanel("Social Action", makeInputsTab("Social Action")),
        tabPanel("Prayer", makeInputsTab("Prayer"))
             ),
-    
-    # Download Button ------------------------- 
-    # downloadButton("downloadData", "Download"),
-    # textOutput("dev_commentary_2"),
+   
     
     actionButton("graphButton", "Show me my Graph"),
     add_busy_spinner(spin = "fading-circle"),
-    imageOutput("vis"),
-    a("Tweet", href = "https://api.twitter.com/oauth/authorize?oauth_token=OQ3uBugy92WNYQZVVdnThReQQ")
+    a("Sign in with Twitter", href = url),
+    actionButton("tweet", "Send test Tweet"),
+    imageOutput("vis")
     )
     )
 
-server <- function(input, output) {
+server <- function(input, output, session) {
+   ### Watch Twitter button
    
+   observeEvent(input$tweet,
+                {
+   query <- getQueryString(session)
+   
+   get_access_token <- 
+      function(app, 
+               oauth_token,
+               oauth_verifier){
+         
+         url <- 
+            paste0(
+               "https://api.twitter.com/oauth/access_token?oauth_token=",
+               oauth_token, "&oauth_verifier=", oauth_verifier)
+         
+         response <- 
+            httr::POST(url, 
+                       oauth_sig(url,
+                                 "POST",
+                                 private_key = NULL))
+         
+         if(response$status_code == 200L){
+            results <- 
+               content(
+                  response,
+                  type = "application/x-www-form-urlencoded",
+                  encoding = "UTF-8")
+            
+            # since storing the username might be creepy
+            results[["screen_name"]] <- NULL 
+            
+            # since storing the user id might be creepy
+            results[["user_id"]] <- NULL     
+            
+            results
+         } else {
+            NULL
+         }
+      }
+   
+   access_token <- 
+      get_access_token(app, query$oauth_token, query$oauth_verifier)
+   
+   user_token <- create_token(app="Church Army's Reflective Tool", 
+                              consumer_key = keys$consumerKey, 
+                              consumer_secret = keys$consumerSecret, 
+                              access_token = access_token$oauth_token, 
+                              access_secret = access_token$oauth_token_secret)
+   
+                   rtweet::post_tweet(token = user_token,
+                                      status = "Just testing a cool new bot. Exciting things on the way. Watch this space!")
+                })
    output$dev_commentary_2 <- renderText("You can download a csv of your own responses. Not very useful, but it proves the concept.")
    output$dev_commentary <- renderText("This takes about 2 minutes. But the beauty is that we can gift that time to the user for personal reflection.")
    ### makeFeelingInputs() generates input rows for the feelings colum :::::::::::
