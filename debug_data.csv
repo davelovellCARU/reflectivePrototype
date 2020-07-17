@@ -1,4 +1,5 @@
 "type","number","activity","status","feeling"
+<<<<<<< HEAD
 "communal_worship",1,"","started",""
 "communal_worship",2,"","started",""
 "communal_worship",3,"","started",""
@@ -34,3 +35,40 @@
 "social_action",3,"","started",""
 "social_action",4,"","started",""
 "social_action",5,"","started",""
+=======
+"communal_worship",1,"","started",NA
+"communal_worship",2,"","started",NA
+"communal_worship",3,"","started",NA
+"communal_worship",4,"","started",NA
+"communal_worship",5,"","started",NA
+"community",1,"activity_one","started",NA
+"community",2,"activity_two","ended",NA
+"community",3,"activity_three","changed",NA
+"community",4,"activity_four","stayed the same",NA
+"community",5,"","started",NA
+"discipleship",1,"","started",NA
+"discipleship",2,"","started",NA
+"discipleship",3,"","started",NA
+"discipleship",4,"","started",NA
+"discipleship",5,"","started",NA
+"evangelism",1,"","started",NA
+"evangelism",2,"","started",NA
+"evangelism",3,"","started",NA
+"evangelism",4,"","started",NA
+"evangelism",5,"","started",NA
+"prayer",1,"","started",NA
+"prayer",2,"","started",NA
+"prayer",3,"","started",NA
+"prayer",4,"","started",NA
+"prayer",5,"","started",NA
+"sacraments",1,"","started",NA
+"sacraments",2,"","started",NA
+"sacraments",3,"","started",NA
+"sacraments",4,"","started",NA
+"sacraments",5,"","started",NA
+"social_action",1,"","started",NA
+"social_action",2,"","started",NA
+"social_action",3,"","started",NA
+"social_action",4,"","started",NA
+"social_action",5,"","started",NA
+>>>>>>> no_gif

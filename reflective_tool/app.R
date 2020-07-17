@@ -1,4 +1,5 @@
 library("shiny")
+library("shinythemes")
 library("stringr")
 library("dplyr")
 library("purrr")
@@ -14,6 +15,9 @@ library("carutools")
 library("Cairo")
 library("shinybusy")
 library("gifski")
+library("httr")
+library("rtweet")
+library("markdown")
 
 
 ### VARIABLES AND FUNCTIONS ####
@@ -41,7 +45,19 @@ makeNameInputs <- function(tab = NULL, rows = NULL) {
                           if(number == 1) "Activity"
                           else NULL
                        },
-                       choices = NULL,
+                       choices = 
+                          if(number == 1){
+                           case_when(
+                           str_detect(tab, "communal worship") ~ "Congregational  singing",
+                           str_detect(tab, "community activities") ~ "Board games night",
+                           str_detect(tab, "discipleship") ~ "Student one-to-ones",
+                           str_detect(tab, "evangelism") ~ "Board games night",
+                           str_detect(tab, "prayer") ~ "Wednesday morning prayer meeting",
+                           str_detect(tab, "sacraments") ~ "Sunday morning communion",
+                           str_detect(tab, "social action") ~ "Food bank volunteering",
+                           TRUE ~ ""
+                              )
+                             },
                        options = list(create = TRUE))
           }) -> inputList
    
@@ -78,7 +94,7 @@ makeInputsTab <- function(tabName, choices = NULL, values = NULL) {
             fixedRow(
                column(4, makeNameInputs(tab = str_to_lower(tabName), rows = n_rows)),
                column(5, makeStatusInputs(tab = str_to_lower(tabName), rows = n_rows)),
-               column(3, uiOutput(tabName %>% str_to_lower %>% str_replace_all("[:space:]", "_")) ),
+               # column(3, uiOutput(tabName %>% str_to_lower %>% str_replace_all("[:space:]", "_")) ),
                # column(3, makeFeelingInputs(tab = str_to_lower(tabName), rows = n_rows, choices = choices, values = values)),
                whitespace()
             # )
@@ -87,16 +103,69 @@ makeInputsTab <- function(tabName, choices = NULL, values = NULL) {
    return(myTabPanel)
 }
 
+#### Twitter Oath stuff
 
+keys <- list(
+   consumerKey = read.table("credentials/twitter_consumer_key.txt")[[1,1]],
+   consumerSecret = read.table(file = "credentials/twitter_consumer_secret.txt")[[1,1]]
+)
+app <- 
+   oauth_app(
+      app = "Church Army's Reflective Tool",
+      key = keys$consumerKey,
+      secret = keys$consumerSecret
+   )
 
+oauth_sig <- function(url, method, token = NULL, token_secret = NULL, private_key = NULL, ...){
+   httr::oauth_header(
+      httr::oauth_signature(url, 
+                            method,
+                            app,
+                            token,
+                            token_secret, 
+                            private_key,
+                            other_params = list(...)))
+} # Stole this from JN: https://medium.com/@skyetetra/how-to-make-rtweet-r-shiny-apps-with-user-credentials-48acca246b58
+
+get_authorization_url <- 
+   function(app, callback_url, permission=NULL){
+      private_key <- NULL
+      
+      response <- 
+         httr::POST(
+            "https://api.twitter.com/oauth/request_token",
+            oauth_sig(
+               "https://api.twitter.com/oauth/request_token",
+               "POST", 
+               private_key = NULL,
+               oauth_callback = callback_url)
+         )
+      
+      httr::stop_for_status(response)
+      
+      params <- 
+         httr::content(
+            response, 
+            type = "application/x-www-form-urlencoded")
+      authorize_url <- 
+         httr::modify_url(
+            "https://api.twitter.com/oauth/authenticate",
+            query = list(oauth_token = params$oauth_token, 
+                         permission = permission))
+      authorize_url 
+   } # also stole this lol
+
+url <- get_authorization_url(app, "https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/")
 
 ui <- fluidPage(
+   theme = shinytheme("lumen"),
     
-    titlePanel("Reflecting on Change"),
+    titlePanel("Hello"),
+   includeMarkdown("introduction.md"), 
     verticalLayout(
     
     tabsetPanel(
-       tabPanel("Community", makeInputsTab("Community")),
+       tabPanel("Community Activities", makeInputsTab("Community Activities")),
        tabPanel("Discipleship", makeInputsTab("Discipleship")),
        tabPanel("Communal Worship", makeInputsTab("Communal Worship")),
        tabPanel("Sacraments", makeInputsTab("Sacraments")),
@@ -104,19 +173,70 @@ ui <- fluidPage(
        tabPanel("Social Action", makeInputsTab("Social Action")),
        tabPanel("Prayer", makeInputsTab("Prayer"))
             ),
+   
     
-    downloadButton("downloadData", "Download"),
-    textOutput("dev_commentary_2"),
-    actionButton("graphButton", "Make Graph"),
-    textOutput("dev_commentary"),
+    actionButton("graphButton", "Show me my Graph"),
     add_busy_spinner(spin = "fading-circle"),
+    a("Sign in with Twitter", href = url),
+    actionButton("tweet", "Send test Tweet"),
     imageOutput("vis")
-    
     )
     )
 
-server <- function(input, output) {
+server <- function(input, output, session) {
+   ### Watch Twitter button
    
+   observeEvent(input$tweet,
+                {
+   query <- getQueryString(session)
+   
+   get_access_token <- 
+      function(app, 
+               oauth_token,
+               oauth_verifier){
+         
+         url <- 
+            paste0(
+               "https://api.twitter.com/oauth/access_token?oauth_token=",
+               oauth_token, "&oauth_verifier=", oauth_verifier)
+         
+         response <- 
+            httr::POST(url, 
+                       oauth_sig(url,
+                                 "POST",
+                                 private_key = NULL))
+         
+         if(response$status_code == 200L){
+            results <- 
+               content(
+                  response,
+                  type = "application/x-www-form-urlencoded",
+                  encoding = "UTF-8")
+            
+            # since storing the username might be creepy
+            results[["screen_name"]] <- NULL 
+            
+            # since storing the user id might be creepy
+            results[["user_id"]] <- NULL     
+            
+            results
+         } else {
+            NULL
+         }
+      }
+   
+   access_token <- 
+      get_access_token(app, query$oauth_token, query$oauth_verifier)
+   
+   user_token <- create_token(app="Church Army's Reflective Tool", 
+                              consumer_key = keys$consumerKey, 
+                              consumer_secret = keys$consumerSecret, 
+                              access_token = access_token$oauth_token, 
+                              access_secret = access_token$oauth_token_secret)
+   
+                   rtweet::post_tweet(token = user_token,
+                                      status = "Just testing a cool new bot. Exciting things on the way. Watch this space!")
+                })
    output$dev_commentary_2 <- renderText("You can download a csv of your own responses. Not very useful, but it proves the concept.")
    output$dev_commentary <- renderText("This takes about 2 minutes. But the beauty is that we can gift that time to the user for personal reflection.")
    ### makeFeelingInputs() generates input rows for the feelings colum :::::::::::
@@ -149,13 +269,14 @@ server <- function(input, output) {
    status_split <- function(statusValue) {
       
       statusValue %<>% as.character
+      statusValue %<>% str_to_lower()
       
       if (statusValue == "ended") {
          beforeStatus <- "existent"
          afterStatus <- "non-existent"
       } else if (statusValue == "started") {
          beforeStatus <- "non-existent"
-         afterStatus <- "existent"
+         afterStatus <- "new"
       } else if (statusValue == "stayed the same") {
          beforeStatus <- "existent"
          afterStatus <- "existent"
@@ -170,7 +291,7 @@ server <- function(input, output) {
       statusTibble <- tibble(beforeStatus = beforeStatus,
                              afterStatus = afterStatus) %>%
          mutate(across(everything(),
-                       ~ factor(.,levels = rev(c("existent", "different", "non-existent")),
+                       ~ factor(.,levels = rev(c("existent", "different", "new", "non-existent")),
                                 ordered = TRUE)
          ))
       
@@ -197,16 +318,16 @@ server <- function(input, output) {
        vars$userChoices <- c(vars$userChoices, input$communal_worship_feeling_4) %>% unique})
    observeEvent(input$communal_worship_feeling_5, {
        vars$userChoices <- c(vars$userChoices, input$communal_worship_feeling_5) %>% unique})
-   observeEvent(input$community_feeling_1, {
-       vars$userChoices <- c(vars$userChoices, input$community_feeling_1) %>% unique})
-   observeEvent(input$community_feeling_2, {
-       vars$userChoices <- c(vars$userChoices, input$community_feeling_2) %>% unique})
-   observeEvent(input$community_feeling_3, {
-       vars$userChoices <- c(vars$userChoices, input$community_feeling_3) %>% unique})
-   observeEvent(input$community_feeling_4, {
-       vars$userChoices <- c(vars$userChoices, input$community_feeling_4) %>% unique})
-   observeEvent(input$community_feeling_5, {
-       vars$userChoices <- c(vars$userChoices, input$community_feeling_5) %>% unique})
+   observeEvent(input$community_activities_feeling_1, {
+       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_1) %>% unique})
+   observeEvent(input$community_activities_feeling_2, {
+       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_2) %>% unique})
+   observeEvent(input$community_activities_feeling_3, {
+       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_3) %>% unique})
+   observeEvent(input$community_activities_feeling_4, {
+       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_4) %>% unique})
+   observeEvent(input$community_activities_feeling_5, {
+       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_5) %>% unique})
    observeEvent(input$discipleship_feeling_1, {
        vars$userChoices <- c(vars$userChoices, input$discipleship_feeling_1) %>% unique})
    observeEvent(input$discipleship_feeling_2, {
@@ -264,7 +385,7 @@ server <- function(input, output) {
   ### Activities Tibble ###### 
    activities <- reactive({tibble(
        type = rep(
-           c("community",
+           c("community_activities",
              "discipleship",
              "communal_worship",
              "sacraments",
@@ -290,13 +411,13 @@ server <- function(input, output) {
                                   else(.)})) %>%  
        arrange(type, number)})
    
-   output$community <- renderUI({makeFeelingInputs("Community", choices = choice_added(), 
+   output$community_activities <- renderUI({makeFeelingInputs("Community Activities", choices = choice_added(), 
                                                values = c(
-                                                   input$community_feeling_1,
-                                                   input$community_feeling_2,
-                                                   input$community_feeling_3,
-                                                   input$community_feeling_4,
-                                                   input$community_feeling_5
+                                                   input$community_activities_feeling_1,
+                                                   input$community_activities_feeling_2,
+                                                   input$community_activities_feeling_3,
+                                                   input$community_activities_feeling_4,
+                                                   input$community_activities_feeling_5
                                                ), rows = n_rows)})
    output$discipleship <- renderUI({makeFeelingInputs("Discipleship", choices = choice_added(),
                                                   values = c(
@@ -347,7 +468,7 @@ server <- function(input, output) {
                                                 input$prayer_feeling_5
                                             ), rows = n_rows)})
    
-   outputOptions(output, "community", suspendWhenHidden = FALSE)
+   outputOptions(output, "community_activities", suspendWhenHidden = FALSE)
    outputOptions(output, "discipleship", suspendWhenHidden = FALSE)
    outputOptions(output, "communal_worship", suspendWhenHidden = FALSE)
    outputOptions(output, "sacraments", suspendWhenHidden = FALSE)
@@ -355,13 +476,6 @@ server <- function(input, output) {
    outputOptions(output, "social_action", suspendWhenHidden = FALSE)
    outputOptions(output, "prayer", suspendWhenHidden = FALSE)
    
-   output$debug <- renderText({toString(c(vars$community_feeling_1,
-   vars$community_feeling_2,
-   vars$community_feeling_3,
-   vars$community_feeling_4,
-   vars$community_feeling_5))
-      })
-
    output$downloadData <- downloadHandler(
       filename = "activities.csv",
       content = function(file) {write.csv(activities(), file, row.names = FALSE)}
@@ -374,7 +488,6 @@ server <- function(input, output) {
                    visData <- isolate(activities())
                    
                    visData %<>% group_by(type, number, activity)
-                   visData %<>% rowwise
                    visData %<>% summarise(status_split(status))
                    visData %<>% ungroup
                    
@@ -389,18 +502,40 @@ server <- function(input, output) {
                    
                    visData %<>% group_by(type, time)
                    visData %<>% summarise(existent = sum(status == "existent" & !is.na(activity) & activity != ""),
-                                          different = sum(status == "different" & !is.na(activity) & activity != "")) %>% 
-                      pivot_longer(all_of(c("existent", "different")),
+                                          different = sum(status == "different" & !is.na(activity) & activity != ""),
+                                          new = sum(status == "new" & !is.na(activity) & activity != ""), 
+                                          non_existent = sum(status == "non-existent" & !is.na(activity) & activity != "")) %>% 
+                      pivot_longer(all_of(c("existent", "different", "non_existent", "new")),
                                    names_to = "status",
                                    values_to = "occurence")
                    
                    donutHole <- 0.5
+
+                   visData %<>% filter(time == "after")
                    
                    make_radial <- function(visData) {
                       
-                      visData %<>% group_by(type, time)
-                      visData %<>% arrange(type, time, occurence)
-                      visData %>%
+                      visData %<>% mutate(status = 
+                                             status %>% 
+                                             fct_recode("Stayed the same" = "existent", 
+                                                        "Changed" = "different",
+                                                        "Ended" = "non_existent",
+                                                        "New" = "new") %>% 
+                                             fct_relevel(rev(
+                                                c("Stayed the same",
+                                                  "Changed",
+                                                  "New",
+                                                  "Ended")
+                                             )))
+                      
+                      visData %<>% group_by(type)
+                      
+                      # Temporary variable for arranging by factor level
+                      visData %<>% mutate(statLevels = as.numeric(status))
+                      
+                      visData %<>% arrange(desc(statLevels), by_group = TRUE)
+                      
+                      visData %<>%
                          mutate(
                             occurence = 
                                ### clever snippet gets heights for big circle
@@ -408,19 +543,23 @@ server <- function(input, output) {
                                {tmp <- sqrt(cumsum(c(donutHole, .)))
                                tmp <- tmp - c(0, tmp[-length(tmp)])
                                tmp[-1]})
+                      return(visData)
                    }
-                   
+
                    visData %<>% make_radial
+                   
+                   
+                   
+                   visData %<>% rename("Activity status:" = "status")
                    
                    visData %<>% mutate(type = 
                                           type %>% 
                                           str_replace_all("_", " ") %>% 
                                           str_to_title())
-                   visData %<>% mutate(status = 
-                                          status %>% 
-                                          fct_recode("Consistent activity" = "existent", 
-                                                     "Modified activity" = "different"))
-                   visData %<>% rename("Activity status:" = "status")
+                   
+                   ### Remove zero-count 'ended's (remove empty 'outline' box in plot)
+                   visData %<>% mutate(occurence = 
+                                          replace(occurence, occurence == 0, NA))
                    
                    q <- ggplot(visData, aes(
                       x = type,
@@ -428,15 +567,30 @@ server <- function(input, output) {
                    )) +
                       geom_bar(stat = "identity",
                                position = "stack",
-                               width = 1.01,
+                               width = 1,
+                               col = "black",
                                aes(group = `Activity status:`,
                                    fill = `Activity status:`,
-                                   col = `Activity status:`)) +
+                                   # col = `Activity status:`,
+                                   linetype = `Activity status:`,
+                                   size = `Activity status:`)) +
                       coord_polar(theta = "x") +
                       theme_minimal() +
                       scale_y_continuous(breaks = NULL, limits = c(- donutHole, NA)) +
-                      scale_fill_manual(values = rev(c(ct_darkteal(), ct_cyan()))) +
-                      scale_color_manual(values = rev(c(ct_darkteal(), ct_cyan()))) +
+                      scale_x_discrete(labels = function(kek) str_replace_all(kek,"[:space:]", "\n")) +
+                      scale_fill_manual(values = c("Stayed the same" = ct_darkteal(),
+                                                   "Changed" = ct_cyan(),
+                                                   "New" = ct_purple(),
+                                                   "Ended" = NA),
+                                        na.translate = FALSE) +
+                      scale_linetype_manual(values = c("Stayed the same" = "solid",
+                                                       "Changed" = "solid",
+                                                       "New" = "solid",
+                                                       "Ended" = "dotted")) +
+                      scale_size_manual(values = c("Stayed the same" = .6,
+                                                       "Changed" = .6,
+                                                       "New" = .6,
+                                                       "Ended" = .4)) +
                       xlab(NULL) +
                       ylab(NULL) +
                       theme(axis.text.x = element_text(size = 15,
@@ -444,27 +598,14 @@ server <- function(input, output) {
                                                           360 / (2 * pi) * seq(2 * pi - pi / 7, pi / 7, len = 7),
                                                        hjust = 1),
                             plot.title = element_text(size = 17),
-                            panel.grid = element_blank())
+                            panel.grid = element_blank(),
+                            plot.caption = element_text(size = 10, colour = "grey45")) +
+                      labs(caption = "Church Army")
+                      # annotate("text", x = 1,  y = -.5, label = "Church\nArmy",
+                      #          hjust=1.1, vjust=-1.1, col="black", cex=4,
+                      #          fontface = "bold", alpha = 0.8)
                    
-                   anim <- q +
-                      transition_states(time,
-                                        transition_length = 2,
-                                        state_length = 5) +
-                      ease_aes("sine-in-out") +
-                      ggtitle("Activities {closest_state} lockdown")
-                   
-                   anim %<>% animate(nframes = 200, fps = 66, type = "cairo")
-                   
-                   output$vis <- renderImage({
-                      outfile <- tempfile(fileext = '.gif')
-                      
-                      anim_save("outfile.gif", anim)
-                      
-                      list(src = "outfile.gif",
-                           contentType = "image/gif")
-                   },
-                   
-                   deleteFile = TRUE)
+                   output$vis <- renderPlot({q})
                 })
 }
 
