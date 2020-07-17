@@ -15,6 +15,8 @@ library("carutools")
 library("Cairo")
 library("shinybusy")
 library("gifski")
+library("httr")
+library("rtweet")
 
 
 ### VARIABLES AND FUNCTIONS ####
@@ -100,6 +102,12 @@ makeInputsTab <- function(tabName, choices = NULL, values = NULL) {
    return(myTabPanel)
 }
 
+app <- 
+   oauth_app(
+      app = "Church Army's Reflective Tool",
+      key = read.table(file = "reflective_tool/credentials/twitter_consumer_key.txt")[[1,1]],
+      secret = read.table(file = "reflective_tool/credentials/twitter_consumer_secret.txt")[[1,1]]
+   )
 
 
 
@@ -107,7 +115,7 @@ ui <- fluidPage(
    theme = shinytheme("lumen"),
     
     titlePanel("Hello"),
-   includeMarkdown("introduction.md"),
+   includeMarkdown("introduction.md"), 
     verticalLayout(
     
     tabsetPanel(
@@ -126,8 +134,8 @@ ui <- fluidPage(
     
     actionButton("graphButton", "Show me my Graph"),
     add_busy_spinner(spin = "fading-circle"),
-    imageOutput("vis")
-    
+    imageOutput("vis"),
+    a("Tweet", href = "https://api.twitter.com/oauth/authorize?oauth_token=OQ3uBugy92WNYQZVVdnThReQQ")
     )
     )
 
