@@ -90,20 +90,16 @@ makeStatusInputs <- function(tab = NULL, rows = NULL, choices = statusChoices) {
 makeInputsTab <- function(tabName, choices = NULL, values = NULL) {
    stopifnot( is.character(tabName) )
    
-   # tabPanel(id = str_to_title(tabName),
             fixedRow(
                column(4, makeNameInputs(tab = str_to_lower(tabName), rows = n_rows)),
                column(5, makeStatusInputs(tab = str_to_lower(tabName), rows = n_rows)),
-               # column(3, uiOutput(tabName %>% str_to_lower %>% str_replace_all("[:space:]", "_")) ),
-               # column(3, makeFeelingInputs(tab = str_to_lower(tabName), rows = n_rows, choices = choices, values = values)),
                whitespace()
-            # )
    ) -> myTabPanel
    
    return(myTabPanel)
 }
 
-#### Twitter Oath stuff
+#### Twitter Oath stuff -----
 
 keys <- list(
    consumerKey = read.table("credentials/twitter_consumer_key.txt")[[1,1]],
@@ -125,7 +121,7 @@ oauth_sig <- function(url, method, token = NULL, token_secret = NULL, private_ke
                             token_secret, 
                             private_key,
                             other_params = list(...)))
-} # Stole this from JN: https://medium.com/@skyetetra/how-to-make-rtweet-r-shiny-apps-with-user-credentials-48acca246b58
+} #### Stole this from JN: https://medium.com/@skyetetra/how-to-make-rtweet-r-shiny-apps-with-user-credentials-48acca246b58 ----
 
 get_authorization_url <- 
    function(app, callback_url, permission=NULL){
@@ -184,7 +180,7 @@ ui <- fluidPage(
     )
 
 server <- function(input, output, session) {
-   ### Watch Twitter button
+   ### Watch Twitter button ------
    
    observeEvent(input$tweet,
                 {
@@ -237,33 +233,6 @@ server <- function(input, output, session) {
                    rtweet::post_tweet(token = user_token,
                                       status = "Just testing a cool new bot. Exciting things on the way. Watch this space!")
                 })
-   output$dev_commentary_2 <- renderText("You can download a csv of your own responses. Not very useful, but it proves the concept.")
-   output$dev_commentary <- renderText("This takes about 2 minutes. But the beauty is that we can gift that time to the user for personal reflection.")
-   ### makeFeelingInputs() generates input rows for the feelings colum :::::::::::
-   makeFeelingInputs <- function(tab = NULL, rows = NULL, choices = NULL, values = NULL) {
-      # Stop conditions
-      stopifnot(is.character(tab), is.numeric(rows), rows > 0)
-      
-      # make list
-      lapply(1:rows,
-             function(number) {
-                selectizeInput(inputId = paste0(
-                   str_replace_all(tab, "[:space:]", "_") %>% 
-                      str_to_lower,
-                   "_feeling_",
-                   as.character(number)),
-                   label = {
-                      if(number == 1) "I feel:"
-                      else NULL
-                   },
-                   choices = choices,
-                   options = list(create = TRUE),
-                   multiple = FALSE,
-                   selected = values[number])
-             }) -> inputList
-      
-      return(inputList)
-   }
    
 #### status_split used to reformat data when making visualisation ####
    status_split <- function(statusValue) {
@@ -284,7 +253,6 @@ server <- function(input, output, session) {
          beforeStatus <- "existent"
          afterStatus <- "different"
       } else {
-         # stop("Activity status must be one of: 'started', ended', 'changed' or 'stayed the same'")
          NA
       }
       
@@ -307,81 +275,6 @@ server <- function(input, output, session) {
    vars$userChoices <- character()
    choice_added <- reactive(vars$userChoices)
    
-   #### Event observers for selectize inputs #######
-   observeEvent(input$communal_worship_feeling_1, {
-       vars$userChoices <- c(vars$userChoices, input$communal_worship_feeling_1) %>% unique})
-   observeEvent(input$communal_worship_feeling_2, {
-       vars$userChoices <- c(vars$userChoices, input$communal_worship_feeling_2) %>% unique})
-   observeEvent(input$communal_worship_feeling_3, {
-       vars$userChoices <- c(vars$userChoices, input$communal_worship_feeling_3) %>% unique})
-   observeEvent(input$communal_worship_feeling_4, {
-       vars$userChoices <- c(vars$userChoices, input$communal_worship_feeling_4) %>% unique})
-   observeEvent(input$communal_worship_feeling_5, {
-       vars$userChoices <- c(vars$userChoices, input$communal_worship_feeling_5) %>% unique})
-   observeEvent(input$community_activities_feeling_1, {
-       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_1) %>% unique})
-   observeEvent(input$community_activities_feeling_2, {
-       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_2) %>% unique})
-   observeEvent(input$community_activities_feeling_3, {
-       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_3) %>% unique})
-   observeEvent(input$community_activities_feeling_4, {
-       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_4) %>% unique})
-   observeEvent(input$community_activities_feeling_5, {
-       vars$userChoices <- c(vars$userChoices, input$community_activities_feeling_5) %>% unique})
-   observeEvent(input$discipleship_feeling_1, {
-       vars$userChoices <- c(vars$userChoices, input$discipleship_feeling_1) %>% unique})
-   observeEvent(input$discipleship_feeling_2, {
-       vars$userChoices <- c(vars$userChoices, input$discipleship_feeling_2) %>% unique})
-   observeEvent(input$discipleship_feeling_3, {
-       vars$userChoices <- c(vars$userChoices, input$discipleship_feeling_3) %>% unique})
-   observeEvent(input$discipleship_feeling_4, {
-       vars$userChoices <- c(vars$userChoices, input$discipleship_feeling_4) %>% unique})
-   observeEvent(input$discipleship_feeling_5, {
-       vars$userChoices <- c(vars$userChoices, input$discipleship_feeling_5) %>% unique})
-   observeEvent(input$evangelism_feeling_1, {
-       vars$userChoices <- c(vars$userChoices, input$evangelism_feeling_1) %>% unique})
-   observeEvent(input$evangelism_feeling_2, {
-       vars$userChoices <- c(vars$userChoices, input$evangelism_feeling_2) %>% unique})
-   observeEvent(input$evangelism_feeling_3, {
-       vars$userChoices <- c(vars$userChoices, input$evangelism_feeling_3) %>% unique})
-   observeEvent(input$evangelism_feeling_4, {
-       vars$userChoices <- c(vars$userChoices, input$evangelism_feeling_4) %>% unique})
-   observeEvent(input$evangelism_feeling_5, {
-       vars$userChoices <- c(vars$userChoices, input$evangelism_feeling_5) %>% unique})
-   observeEvent(input$prayer_feeling_1, {
-       vars$userChoices <- c(vars$userChoices, input$prayer_feeling_1) %>% unique})
-   observeEvent(input$prayer_feeling_2, {
-       vars$userChoices <- c(vars$userChoices, input$prayer_feeling_2) %>% unique})
-   observeEvent(input$prayer_feeling_3, {
-       vars$userChoices <- c(vars$userChoices, input$prayer_feeling_3) %>% unique})
-   observeEvent(input$prayer_feeling_4, {
-       vars$userChoices <- c(vars$userChoices, input$prayer_feeling_4) %>% unique})
-   observeEvent(input$prayer_feeling_5, {
-       vars$userChoices <- c(vars$userChoices, input$prayer_feeling_5) %>% unique})
-   observeEvent(input$sacraments_feeling_1, {
-       vars$userChoices <- c(vars$userChoices, input$sacraments_feeling_1) %>% unique})
-   observeEvent(input$sacraments_feeling_2, {
-       vars$userChoices <- c(vars$userChoices, input$sacraments_feeling_2) %>% unique})
-   observeEvent(input$sacraments_feeling_3, {
-       vars$userChoices <- c(vars$userChoices, input$sacraments_feeling_3) %>% unique})
-   observeEvent(input$sacraments_feeling_4, {
-       vars$userChoices <- c(vars$userChoices, input$sacraments_feeling_4) %>% unique})
-   observeEvent(input$sacraments_feeling_5, {
-       vars$userChoices <- c(vars$userChoices, input$sacraments_feeling_5) %>% unique})
-   observeEvent(input$social_action_feeling_1, {
-       vars$userChoices <- c(vars$userChoices, input$social_action_feeling_1) %>% unique})
-   observeEvent(input$social_action_feeling_2, {
-       vars$userChoices <- c(vars$userChoices, input$social_action_feeling_2) %>% unique})
-   observeEvent(input$social_action_feeling_3, {
-       vars$userChoices <- c(vars$userChoices, input$social_action_feeling_3) %>% unique})
-   observeEvent(input$social_action_feeling_4, {
-       vars$userChoices <- c(vars$userChoices, input$social_action_feeling_4) %>% unique})
-   observeEvent(input$social_action_feeling_5, {
-       vars$userChoices <- c(vars$userChoices, input$social_action_feeling_5) %>% unique})
-   
-   
-   ### Pass a vector of 5 things to generateFeelingsInputs
-   
   ### Activities Tibble ###### 
    activities <- reactive({tibble(
        type = rep(
@@ -402,79 +295,8 @@ server <- function(input, output, session) {
                 status = 
                    map2_chr(type, number, ~ parse(text = paste0("input$", .x, "_status_", .y)) %>% 
                                {.[[1]]} %>% 
-                               eval),
-                feeling = 
-                   map2_chr(type, number, ~ parse(text = paste0("input$", .x, "_feeling_", .y)) %>% 
-                               {.[[1]]} %>% 
-                               eval %>% 
-                               {if(is.null(.)) NA
-                                  else(.)})) %>%  
+                               eval)) %>%  
        arrange(type, number)})
-   
-   output$community_activities <- renderUI({makeFeelingInputs("Community Activities", choices = choice_added(), 
-                                               values = c(
-                                                   input$community_activities_feeling_1,
-                                                   input$community_activities_feeling_2,
-                                                   input$community_activities_feeling_3,
-                                                   input$community_activities_feeling_4,
-                                                   input$community_activities_feeling_5
-                                               ), rows = n_rows)})
-   output$discipleship <- renderUI({makeFeelingInputs("Discipleship", choices = choice_added(),
-                                                  values = c(
-                                                      input$discipleship_feeling_1,
-                                                      input$discipleship_feeling_2,
-                                                      input$discipleship_feeling_3,
-                                                      input$discipleship_feeling_4,
-                                                      input$discipleship_feeling_5
-                                                  ), rows = n_rows)})
-   output$communal_worship <- renderUI({makeFeelingInputs("Communal Worship", choices = choice_added(),
-                                                      values = c(
-                                                          input$communal_worship_feeling_1,
-                                                          input$communal_worship_feeling_2,
-                                                          input$communal_worship_feeling_3,
-                                                          input$communal_worship_feeling_4,
-                                                          input$communal_worship_feeling_5
-                                                      ), rows = n_rows)})
-   output$sacraments <- renderUI({makeFeelingInputs("Sacraments", choices = choice_added(),
-                                                values = c(
-                                                    input$sacraments_feeling_1,
-                                                    input$sacraments_feeling_2,
-                                                    input$sacraments_feeling_3,
-                                                    input$sacraments_feeling_4,
-                                                    input$sacraments_feeling_5
-                                                ), rows = n_rows)})
-   output$evangelism <- renderUI({makeFeelingInputs("Evangelism", choices = choice_added(),
-                                                values = c(
-                                                    input$evangelism_feeling_1,
-                                                    input$evangelism_feeling_2,
-                                                    input$evangelism_feeling_3,
-                                                    input$evangelism_feeling_4,
-                                                    input$evangelism_feeling_5
-                                                ), rows = n_rows)})
-   output$social_action <- renderUI({makeFeelingInputs("Social Action", choices = choice_added(),
-                                                   values =  c(
-                                                       input$social_action_feeling_1,
-                                                       input$social_action_feeling_2,
-                                                       input$social_action_feeling_3,
-                                                       input$social_action_feeling_4,
-                                                       input$social_action_feeling_5
-                                                   ), rows = n_rows)})
-   output$prayer <- renderUI({makeFeelingInputs("Prayer", choices = choice_added(),
-                                            values = c(
-                                                input$prayer_feeling_1,
-                                                input$prayer_feeling_2,
-                                                input$prayer_feeling_3,
-                                                input$prayer_feeling_4,
-                                                input$prayer_feeling_5
-                                            ), rows = n_rows)})
-   
-   outputOptions(output, "community_activities", suspendWhenHidden = FALSE)
-   outputOptions(output, "discipleship", suspendWhenHidden = FALSE)
-   outputOptions(output, "communal_worship", suspendWhenHidden = FALSE)
-   outputOptions(output, "sacraments", suspendWhenHidden = FALSE)
-   outputOptions(output, "evangelism", suspendWhenHidden = FALSE)
-   outputOptions(output, "social_action", suspendWhenHidden = FALSE)
-   outputOptions(output, "prayer", suspendWhenHidden = FALSE)
    
    output$downloadData <- downloadHandler(
       filename = "activities.csv",
@@ -601,9 +423,6 @@ server <- function(input, output, session) {
                             panel.grid = element_blank(),
                             plot.caption = element_text(size = 10, colour = "grey45")) +
                       labs(caption = "Church Army")
-                      # annotate("text", x = 1,  y = -.5, label = "Church\nArmy",
-                      #          hjust=1.1, vjust=-1.1, col="black", cex=4,
-                      #          fontface = "bold", alpha = 0.8)
                    
                    output$vis <- renderPlot({q})
                 })
