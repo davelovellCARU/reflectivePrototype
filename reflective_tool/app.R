@@ -183,7 +183,10 @@ ui <- fluidPage(
     actionButton("graphButton", "Show me my Graph"),
     add_busy_spinner(spin = "fading-circle"),
     uiOutput("tweetButton"),
-    imageOutput("vis")
+    imageOutput("vis"),
+    textOutput("tweetDescription"),
+    uiOutput("tweetInput"),
+    actionButton("testButton", "Test Cache")
     )
     )
 
@@ -191,8 +194,28 @@ server <- function(input, output, session) {
    ### Watch Twitter button ------
    
    output$tweetButton <- renderUI({
-      if (length(getQueryString(session)) >0 ) {
-         actionButton("tweet", "Send test Tweet")
+      if (length(getQueryString(session)) > 0) {
+         actionButton("tweet", "Send Tweet")
+      } else NULL
+   })
+   
+   output$tweetDescription <- renderText({
+      if(length(getQueryString(session)) > 0) {
+         "You are currently signed in with Twitter! You can customise your Tweet using the text box below. When you're ready, hit the 'Send Tweet' button below to Tweet a copy of your visulaisation."
+      }
+   })
+   
+   output$tweetInput <- renderUI({
+      if(length(getQueryString(session)) > 0) {
+         list(
+            textInput(
+               inputId = "tweetBody",
+               value = 
+               "I've been using Church Army's new reflective tool to review how ministry has changed during COVID-19.
+               Take some time to reflect and discover your ministerial visualisation here:
+               https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/"
+            )
+         )
       } else NULL
    })
    
@@ -245,7 +268,7 @@ server <- function(input, output, session) {
                               access_secret = access_token$oauth_token_secret)
    
                    rtweet::post_tweet(token = user_token,
-                                      status = "@youthworkjonny check it out!",
+                                      status = input$tweetBody,
                                       media = "www/plots/plot.jpeg")
                 })
    
@@ -449,6 +472,16 @@ server <- function(input, output, session) {
                       
                       list(src = outfile,
                            alt = "Visualisation of user input")
+                   }, deleteFile = FALSE)
+                })
+   
+   observeEvent(input$testButton,
+                {
+                   output$vis <- renderImage({
+                      outfile <- "www/plots/plot.jpeg"
+                      
+                      list(src = outfile,
+                           alt = "Cache loaded vis")
                    }, deleteFile = FALSE)
                 })
 }
