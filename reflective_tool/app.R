@@ -158,6 +158,12 @@ ui <- fluidPage(
     
     titlePanel("Hello"),
    includeMarkdown("introduction.md"), 
+   tags$a(
+      href = url,
+      tags$img(src =  "resources/twitter_auth.png",
+               height = "20px")
+   ),
+   p(" "),
     verticalLayout(
     
     tabsetPanel(
@@ -173,7 +179,6 @@ ui <- fluidPage(
     
     actionButton("graphButton", "Show me my Graph"),
     add_busy_spinner(spin = "fading-circle"),
-    a("Sign in with Twitter", href = url),
     actionButton("tweet", "Send test Tweet"),
     imageOutput("vis")
     )
@@ -231,7 +236,8 @@ server <- function(input, output, session) {
                               access_secret = access_token$oauth_token_secret)
    
                    rtweet::post_tweet(token = user_token,
-                                      status = "Just testing a cool new bot. Exciting things on the way. Watch this space!")
+                                      status = "Test test test",
+                                      media = "www/resources/twitter_tmp.png")
                 })
    
 #### status_split used to reformat data when making visualisation ####
