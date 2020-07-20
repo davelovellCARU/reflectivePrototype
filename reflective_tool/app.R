@@ -18,6 +18,7 @@ library("gifski")
 library("httr")
 library("rtweet")
 library("markdown")
+library("digest")
 
 
 ### VARIABLES AND FUNCTIONS ####
@@ -157,7 +158,9 @@ ui <- fluidPage(
    theme = shinytheme("lumen"),
     
     titlePanel("Hello"),
-   includeMarkdown("introduction.md"), 
+   includeMarkdown("introduction.md"),
+   h2("Twitter Sharing"),
+   p("Be part of a wider conversation about change by sharing your results on Twitter. You'll need to sign in before you submit your responses, but you'll be in full control of what gets tweeted."),
    tags$a(
       href = url,
       tags$img(src =  "resources/twitter_auth.png",
@@ -179,13 +182,19 @@ ui <- fluidPage(
     
     actionButton("graphButton", "Show me my Graph"),
     add_busy_spinner(spin = "fading-circle"),
-    actionButton("tweet", "Send test Tweet"),
+    uiOutput("tweetButton"),
     imageOutput("vis")
     )
     )
 
 server <- function(input, output, session) {
    ### Watch Twitter button ------
+   
+   output$tweetButton <- renderUI({
+      if (length(getQueryString(session)) >0 ) {
+         actionButton("tweet", "Send test Tweet")
+      } else NULL
+   })
    
    observeEvent(input$tweet,
                 {
@@ -236,15 +245,15 @@ server <- function(input, output, session) {
                               access_secret = access_token$oauth_token_secret)
    
                    rtweet::post_tweet(token = user_token,
-                                      status = "Test test test",
-                                      media = "www/resources/twitter_tmp.png")
+                                      status = "@youthworkjonny check it out!",
+                                      media = "www/plots/plot.jpeg")
                 })
    
 #### status_split used to reformat data when making visualisation ####
    status_split <- function(statusValue) {
       
-      statusValue %<>% as.character
       statusValue %<>% str_to_lower()
+      statusValue %<>% as.character
       
       if (statusValue == "ended") {
          beforeStatus <- "existent"
@@ -399,13 +408,12 @@ server <- function(input, output, session) {
                                col = "black",
                                aes(group = `Activity status:`,
                                    fill = `Activity status:`,
-                                   # col = `Activity status:`,
                                    linetype = `Activity status:`,
                                    size = `Activity status:`)) +
                       coord_polar(theta = "x") +
                       theme_minimal() +
                       scale_y_continuous(breaks = NULL, limits = c(- donutHole, NA)) +
-                      scale_x_discrete(labels = function(kek) str_replace_all(kek,"[:space:]", "\n")) +
+                      scale_x_discrete(labels = function(kek) digest::sha1(str_replace_all(kek,"[:space:]", "\n"))) +
                       scale_fill_manual(values = c("Stayed the same" = ct_darkteal(),
                                                    "Changed" = ct_cyan(),
                                                    "New" = ct_purple(),
@@ -430,7 +438,18 @@ server <- function(input, output, session) {
                             plot.caption = element_text(size = 10, colour = "grey45")) +
                       labs(caption = "Church Army")
                    
-                   output$vis <- renderPlot({q})
+                   #output$vis <- renderPlot({q})
+                   
+                   jpeg("www/plots/plot.jpeg")
+                   print(q)
+                   dev.off()
+                   
+                   output$vis <- renderImage({
+                      outfile <- "www/plots/plot.jpeg"
+                      
+                      list(src = outfile,
+                           alt = "Visualisation of user input")
+                   }, deleteFile = FALSE)
                 })
 }
 
