@@ -12,7 +12,7 @@ library("forcats")
 library("ggplot2")
 library("gganimate")
 library("carutools")
-library("Cairo")
+# library("Cairo")
 library("shinybusy")
 library("gifski")
 library("httr")
@@ -78,7 +78,7 @@ makeStatusInputs <- function(tab = NULL, rows = NULL, choices = statusChoices) {
                 "_status_",
                 as.character(number)),
                 label = {
-                   if(number == 1) "This activity has:"
+                   if(number == 1) "This activity has:" 
                    else NULL
                 },
                 choices = statusChoices)
@@ -207,15 +207,13 @@ server <- function(input, output, session) {
    
    output$tweetInput <- renderUI({
       if(length(getQueryString(session)) > 0) {
-         list(
-            textInput(
-               inputId = "tweetBody",
+            textAreaInput("tweetBody",
+                          label = NULL,
                value = 
                "I've been using Church Army's new reflective tool to review how ministry has changed during COVID-19.
                Take some time to reflect and discover your ministerial visualisation here:
                https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/"
             )
-         )
       } else NULL
    })
    
@@ -269,7 +267,7 @@ server <- function(input, output, session) {
    
                    rtweet::post_tweet(token = user_token,
                                       status = input$tweetBody,
-                                      media = "www/plots/plot.jpeg")
+                                      media = paste0("www/plots/", isolate(imageName()),".jpeg"))
                 })
    
 #### status_split used to reformat data when making visualisation ####
@@ -463,27 +461,20 @@ server <- function(input, output, session) {
                    
                    #output$vis <- renderPlot({q})
                    
-                   jpeg("www/plots/plot.jpeg")
+                   imageName <- reactiveVal(sha1(toString(isolate(activities()))))
+                   
+                   jpeg(paste0("www/plots/", isolate(imageName()),".jpeg"))
                    print(q)
                    dev.off()
                    
                    output$vis <- renderImage({
-                      outfile <- "www/plots/plot.jpeg"
+                      outfile <- paste0("www/plots/", isolate(imageName()),".jpeg")
                       
                       list(src = outfile,
                            alt = "Visualisation of user input")
                    }, deleteFile = FALSE)
                 })
    
-   observeEvent(input$testButton,
-                {
-                   output$vis <- renderImage({
-                      outfile <- "www/plots/plot.jpeg"
-                      
-                      list(src = outfile,
-                           alt = "Cache loaded vis")
-                   }, deleteFile = FALSE)
-                })
 }
 
 # Run the application 
