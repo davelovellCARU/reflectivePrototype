@@ -12,7 +12,6 @@ library("forcats")
 library("ggplot2")
 library("gganimate")
 library("carutools")
-# library("Cairo")
 library("shinybusy")
 library("gifski")
 library("httr")
@@ -204,10 +203,15 @@ ui <- fluidPage(
             )
     ),
    
-    
+   fluidRow( 
+      column(width = 8, offset = 2,
     actionButton("graphButton", "Create Visualisation"),
-    textOutput("tweetDescription"),
-    imageOutput("vis"),
+    textOutput("tweetDescription")
+      )
+    ),
+   column(8, offset = 2, align = "center",
+    imageOutput("vis")
+    ),
     uiOutput("tweetButton"),
     uiOutput("tweetInput")
     )
@@ -460,7 +464,8 @@ https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/"
                    visData %<>% mutate(occurence = 
                                           replace(occurence, occurence == 0, NA))
                    
-                   q <- ggplot(visData, aes(
+                   q <- ggplot(visData %>% 
+                                  rename("Activity type" = "Activity status:"), aes(
                       x = type,
                       y = occurence
                    )) +
@@ -468,14 +473,15 @@ https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/"
                                position = "stack",
                                width = 1,
                                col = "black",
-                               aes(group = `Activity status:`,
-                                   fill = `Activity status:`,
-                                   linetype = `Activity status:`,
-                                   size = `Activity status:`)) +
-                      coord_polar(theta = "x") +
+                               aes(group = `Activity type`,
+                                   fill = `Activity type`,
+                                   linetype = `Activity type`,
+                                   size = `Activity type`)) +
+                      coord_polar(theta = "x", clip = "off") +
                       theme_minimal() +
                       scale_y_continuous(breaks = NULL, limits = c(- donutHole, NA)) +
-                      scale_x_discrete(labels = function(kek) str_replace_all(kek,"[:space:]", "\n")) +
+                      scale_x_discrete(labels = function(kek) str_replace_all(kek,"[:space:]", "\n") %>% 
+                                          paste0("\n")) +
                       scale_fill_manual(values = c("Stayed the same" = ct_darkteal(),
                                                    "Changed" = ct_cyan(),
                                                    "New" = ct_purple(),
@@ -491,20 +497,27 @@ https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/"
                                                        "Ended" = .4)) +
                       xlab(NULL) +
                       ylab(NULL) +
-                      theme(axis.text.x = element_text(size = 15,
+                      theme(axis.text.x = element_text(size = 25,
                                                        angle = 
-                                                          360 / (2 * pi) * seq(2 * pi - pi / 7, pi / 7, len = 7),
-                                                       hjust = 1),
+                                                          360 / (2 * pi) * seq(2 * pi - pi / 7, pi / 7, len = 7)),
                             plot.title = element_text(size = 17),
                             panel.grid = element_blank(),
-                            plot.caption = element_text(size = 10, colour = "grey45")) +
+                            plot.caption = element_text(size = 20, colour = "grey45"),
+                            plot.margin = unit(c(0, 60, 0, 15), "mm"),
+                            legend.text = element_text(size = 17),
+                            legend.title = element_text(size = 20),
+                            legend.position = c(1.21,.5)) +
                       labs(caption = "Church Army")
                    
                    #output$vis <- renderPlot({q})
                    
                    imageName(sha1(toString(isolate(activities()))))
                    
-                   jpeg(paste0("www/plots/", imageName(),".jpeg"))
+                   jpeg(paste0("www/plots/", imageName(),".jpeg"),
+                        res = 350, 
+                        height = 3000, 
+                        width = 3000, 
+                        units = "px")
                    print(q)
                    dev.off()
 
@@ -514,7 +527,7 @@ https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/"
                       
                       list(src = outfile,
                            alt = "Visualisation of user input",
-                           width = 350)
+                           width = 500)
                    }, deleteFile = FALSE)
                    
                    output$tweetVis <- renderImage({
