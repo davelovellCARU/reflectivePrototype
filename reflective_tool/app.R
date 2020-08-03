@@ -156,24 +156,43 @@ url <- get_authorization_url(app, "https://famousrapperdavesantan.shinyapps.io/r
 ui <- fluidPage(
    theme = shinytheme("lumen"),
    add_busy_spinner(spin = "fading-circle"),
-   
-    titlePanel("Hello"),
+
  column(
+    titlePanel(h1("Reflecting on Change", style = "font-family: 'Impact';"), windowTitle = "Church Army's Reflective Tool"),
     width = 6, offset = 3,
-      includeMarkdown("introduction.md"),
+    p("Church Army think that you're one of the leading experts on your own missional context, and we want to help you reflect on how your church has responded to the context it finds itself in.", style = "font-family: 'Trebuchet MS';"),
+    p("Over the last few months many of the activities, events, and gatherings that our churches participate in have changed beyond recognition. In the middle of that change, it can be difficult to take the time to sit back and reflect on what has taken place.", style = "font-family: 'Trebuchet MS';"),
+    p("To help you to take steps on the reflective journey, Church Army have built this tool. By looking at your ministry and those things that have changed, those that have stayed the same, and those that had ended, we can help you build a picture of those areas of life your church has focused on as it has met the needs of the Coronavirus crisis. It may be that new things have begun as well, and this will help you see which areas of church life have flourished in this unique time.", style = "font-family: 'Trebuchet MS';"),
+    p("We have divided church life into seven broad areas. In no particular order these are:", style = "font-family: 'Trebuchet MS';"),
+    tags$div(
+       tags$ul(
+          tags$li("Community"),
+          tags$li("Discipleship"), 
+          tags$li("Communal Worship"),
+          tags$li("Sacraments"), 
+          tags$li("Evangelism"),
+          tags$li("Social Action"),
+          tags$li("Prayer"),
+          style = "font-family: 'Trebuchet MS';"
+       )
+    ),
     p(),
-      h3("Twitter Sharing"),
-      t("Take part in the wider conversation about change by sharing your results on Twitter. You'll need to"), strong("sign in with Twitter before you fill in the table below"), t("because the sign-in process will refresh the page. You'll be in full control of what gets tweeted."),
+      h2("Twitter Sharing", style = "font-family: 'Impact';"),
+      p(
+         t("Take part in the wider conversation about change by sharing your results on Twitter. You'll need to"),
+         strong("sign in with Twitter before you fill in the table below"),
+         t("because the sign-in process will refresh the page. You'll be in full control of what gets tweeted."), style = "font-family: 'Trebuchet MS';"),
       p(),
       tags$a(
          href = url,
          tags$img(src =  "resources/twitter_auth.png",
                   height = "20px")
       ),
-      p(" "),
+      p(),
    ),
     verticalLayout(
     
+       column(width = 8, offset = 2,
     tabsetPanel(
        tabPanel("Community Activities", makeInputsTab("Community Activities")),
        tabPanel("Discipleship", makeInputsTab("Discipleship")),
@@ -182,7 +201,8 @@ ui <- fluidPage(
        tabPanel("Evangelism", makeInputsTab("Evangelism")),
        tabPanel("Social Action", makeInputsTab("Social Action")),
        tabPanel("Prayer", makeInputsTab("Prayer"))
-            ),
+            )
+    ),
    
     
     actionButton("graphButton", "Create Visualisation"),
@@ -505,7 +525,6 @@ https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/"
                            width = 250)
                    }, deleteFile = FALSE)
                 })
-   
 }
 
 # Run the application 
