@@ -93,8 +93,7 @@ makeInputsTab <- function(tabName, choices = NULL, values = NULL) {
    
             fixedRow(
                column(4, makeNameInputs(tab = str_to_lower(tabName), rows = n_rows)),
-               column(5, makeStatusInputs(tab = str_to_lower(tabName), rows = n_rows)),
-               whitespace()
+               column(5, makeStatusInputs(tab = str_to_lower(tabName), rows = n_rows))
    ) -> myTabPanel
    
    return(myTabPanel)
@@ -156,17 +155,23 @@ url <- get_authorization_url(app, "https://famousrapperdavesantan.shinyapps.io/r
 
 ui <- fluidPage(
    theme = shinytheme("lumen"),
-    
+   add_busy_spinner(spin = "fading-circle"),
+   
     titlePanel("Hello"),
-   includeMarkdown("introduction.md"),
-   h2("Twitter Sharing"),
-   p("Be part of a wider conversation about change by sharing your results on Twitter. You'll need to sign in before you submit your responses, but you'll be in full control of what gets tweeted."),
-   tags$a(
-      href = url,
-      tags$img(src =  "resources/twitter_auth.png",
-               height = "20px")
+ column(
+    width = 6, offset = 3,
+      includeMarkdown("introduction.md"),
+    p(),
+      h3("Twitter Sharing"),
+      t("Take part in the wider conversation about change by sharing your results on Twitter. You'll need to"), strong("sign in with Twitter before you fill in the table below"), t("because the sign-in process will refresh the page. You'll be in full control of what gets tweeted."),
+      p(),
+      tags$a(
+         href = url,
+         tags$img(src =  "resources/twitter_auth.png",
+                  height = "20px")
+      ),
+      p(" "),
    ),
-   p(" "),
     verticalLayout(
     
     tabsetPanel(
@@ -180,39 +185,55 @@ ui <- fluidPage(
             ),
    
     
-    actionButton("graphButton", "Show me my Graph"),
-    add_busy_spinner(spin = "fading-circle"),
-    uiOutput("tweetButton"),
-    imageOutput("vis"),
+    actionButton("graphButton", "Create Visualisation"),
     textOutput("tweetDescription"),
-    uiOutput("tweetInput"),
-    actionButton("testButton", "Test Cache")
+    imageOutput("vis"),
+    uiOutput("tweetButton"),
+    uiOutput("tweetInput")
     )
     )
 
 server <- function(input, output, session) {
    ### Watch Twitter button ------
    
+   imageName <- reactiveVal(character(0))
+   tweetImageName <- reactiveVal(character(0))
+   
+   observeEvent(input$showModal,
+                {
+                   output$tweetBodyOut <- renderText({input$tweetBody})
+                   showModal(
+                      modalDialog(
+                      h3("Send this Tweet?"),
+                      textOutput("tweetBodyOut"),
+                      imageOutput("tweetVis", height = "250px"),
+                      actionButton("tweet", "Send Tweet")
+                      )
+                      )
+                })
    output$tweetButton <- renderUI({
       if (length(getQueryString(session)) > 0) {
-         actionButton("tweet", "Send Tweet")
+         actionButton("showModal", "Preview and Send Tweet")
       } else NULL
    })
    
    output$tweetDescription <- renderText({
       if(length(getQueryString(session)) > 0) {
          "You are currently signed in with Twitter! You can customise your Tweet using the text box below. When you're ready, hit the 'Send Tweet' button below to Tweet a copy of your visulaisation."
-      }
+      } else "You are not signed in with Twitter, and will not be able to share your visualisation. If you would like to sign in, you must do so before you enter your responses"
    })
    
    output$tweetInput <- renderUI({
       if(length(getQueryString(session)) > 0) {
             textAreaInput("tweetBody",
-                          label = NULL,
+                          label = "Customise Tweet:",
+                          width = "400px",
+                          height = "150px",
+                          # height = "200px",
                value = 
                "I've been using Church Army's new reflective tool to review how ministry has changed during COVID-19.
-               Take some time to reflect and discover your ministerial visualisation here:
-               https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/"
+Take some time to reflect and discover your ministerial visualisation here:
+https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/"
             )
       } else NULL
    })
@@ -267,7 +288,7 @@ server <- function(input, output, session) {
    
                    rtweet::post_tweet(token = user_token,
                                       status = input$tweetBody,
-                                      media = paste0("www/plots/", isolate(imageName()),".jpeg"))
+                                      media = paste0("www/plots/", imageName(),".jpeg"))
                 })
    
 #### status_split used to reformat data when making visualisation ####
@@ -434,7 +455,7 @@ server <- function(input, output, session) {
                       coord_polar(theta = "x") +
                       theme_minimal() +
                       scale_y_continuous(breaks = NULL, limits = c(- donutHole, NA)) +
-                      scale_x_discrete(labels = function(kek) digest::sha1(str_replace_all(kek,"[:space:]", "\n"))) +
+                      scale_x_discrete(labels = function(kek) str_replace_all(kek,"[:space:]", "\n")) +
                       scale_fill_manual(values = c("Stayed the same" = ct_darkteal(),
                                                    "Changed" = ct_cyan(),
                                                    "New" = ct_purple(),
@@ -461,17 +482,27 @@ server <- function(input, output, session) {
                    
                    #output$vis <- renderPlot({q})
                    
-                   imageName <- reactiveVal(sha1(toString(isolate(activities()))))
+                   imageName(sha1(toString(isolate(activities()))))
                    
-                   jpeg(paste0("www/plots/", isolate(imageName()),".jpeg"))
+                   jpeg(paste0("www/plots/", imageName(),".jpeg"))
                    print(q)
                    dev.off()
+
                    
                    output$vis <- renderImage({
-                      outfile <- paste0("www/plots/", isolate(imageName()),".jpeg")
+                      outfile <- paste0("www/plots/", imageName(),".jpeg")
                       
                       list(src = outfile,
-                           alt = "Visualisation of user input")
+                           alt = "Visualisation of user input",
+                           width = 350)
+                   }, deleteFile = FALSE)
+                   
+                   output$tweetVis <- renderImage({
+                      outfile <- paste0("www/plots/", imageName(),".jpeg")
+                      
+                      list(src = outfile,
+                           alt = "Visualisation of user input",
+                           width = 250)
                    }, deleteFile = FALSE)
                 })
    

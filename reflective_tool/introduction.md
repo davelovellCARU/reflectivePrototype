@@ -16,13 +16,10 @@ We have divided church life into seven broad areas. In no particular order these
 
 Activities may fit into more than one category, or you may not be sure where something fits. This tool is here to serve you, so place it where seems best to you. 
 
-What can I use this for?
+### What can I use this for?
 
 The visualisation of your data could be useful in a variety of ways. It may:
 	
 * Help give you a way to think of your response.
 * Give you something to reflect on with your PCC.
 * Form part of a MAP process.
-
-We would love to hear how else you use this as we move forward. 
-INSERT TWITTER/FB sharing etc…
