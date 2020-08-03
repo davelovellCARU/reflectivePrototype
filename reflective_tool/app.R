@@ -203,6 +203,9 @@ ui <- fluidPage(
     verticalLayout(
     
        column(width = 8, offset = 2,
+              h3("Church/community name:"),
+              textInput("communityName", "What is the name of your church/community?"),
+              h3("Summary of activities by type:"),
     tabsetPanel(
        tabPanel("Community Activities", makeInputsTab("Community Activities")),
        tabPanel("Discipleship", makeInputsTab("Discipleship")),
@@ -216,7 +219,8 @@ ui <- fluidPage(
    
    fluidRow( 
       column(width = 8, offset = 2,
-    actionButton("graphButton", "Create Visualisation"),
+    actionButton("graphButton", "Create my visualisation"),
+    p(),
     textOutput("tweetDescription")
       )
     ),
@@ -264,12 +268,22 @@ server <- function(input, output, session) {
                           label = "Customise Tweet:",
                           width = "400px",
                           height = "150px",
-                          # height = "200px",
                value = 
+                  (
+                  if (is.null(input$communityName)|input$communityName == "")
+                  {
                "I've been using Church Army's new reflective tool to review how ministry has changed during COVID-19.
 Take some time to reflect and discover your ministerial visualisation here:
 https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/"
-            )
+                  } else {
+                     paste0("I've been using Church Army's new reflective tool to review how ministry at ",
+                            str_trim(input$communityName),
+                            "has changed during COVID-19.
+Take some time to reflect and discover your ministerial visualisation here:
+https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/")
+                  }) %>% 
+                        str_sub(1,280)
+               )
       } else NULL
    })
    
@@ -508,17 +522,26 @@ https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/"
                                                        "Ended" = .4)) +
                       xlab(NULL) +
                       ylab(NULL) +
-                      theme(axis.text.x = element_text(size = 25,
+                      theme(axis.text.x = element_text(size = 22,
                                                        angle = 
                                                           360 / (2 * pi) * seq(2 * pi - pi / 7, pi / 7, len = 7)),
-                            plot.title = element_text(size = 17),
+                            plot.title = element_text(size = 24,
+                                                      margin = unit(c(0,0,10,0), "mm"),
+                                                      hjust = -.25),
                             panel.grid = element_blank(),
                             plot.caption = element_text(size = 20, colour = "grey45"),
-                            plot.margin = unit(c(0, 60, 0, 15), "mm"),
+                            plot.margin = unit(c(0, 80, 0, 15), "mm"),
                             legend.text = element_text(size = 17),
                             legend.title = element_text(size = 20),
-                            legend.position = c(1.21,.5)) +
-                      labs(caption = "Church Army")
+                            legend.position = c(1.3,.5)) +
+                      labs(caption = "Church Army") +
+                      ggtitle(
+                         case_when(
+                            input$communityName != "" ~ paste0("The shape of change at\n",
+                                str_trim(input$communityName)),
+                            TRUE ~ "The shape of Change"
+                         )
+                      )
                    
                    #output$vis <- renderPlot({q})
                    
