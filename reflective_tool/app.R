@@ -159,9 +159,9 @@ ui <- fluidPage(
  column(
     titlePanel(h1("Reflecting on Change", style = "font-family: 'Impact';"), windowTitle = "Church Army's Reflective Tool"),
     width = 6, offset = 3,
-    p("Church Army think that you're one of the leading experts on your own missional context, and we want to help you reflect on how your church has responded to the context it finds itself in.", style = "font-family: 'Trebuchet MS';"),
-    p("Over the last few months many of the activities, events, and gatherings that our churches participate in have changed beyond recognition. In the middle of that change, it can be difficult to take the time to sit back and reflect on what has taken place.", style = "font-family: 'Trebuchet MS';"),
-    p("To help you to take steps on the reflective journey, Church Army have built this tool. By looking at your ministry and those things that have changed, those that have stayed the same, and those that had ended, we can help you build a picture of those areas of life your church has focused on as it has met the needs of the Coronavirus crisis. It may be that new things have begun as well, and this will help you see which areas of church life have flourished in this unique time.", style = "font-family: 'Trebuchet MS';"),
+    p("At Church Army, we believe that you are one of the leading experts on your own missional context. That's why we've created this tool: to help you to reflect on how your church is responding to its new context.", style = "font-family: 'Trebuchet MS';"),
+    p("Over the last few months, many of the activities, events, and gatherings that our churches participate in have changed beyond recognition. In the midst of that change, it can be difficult to find time to reflect on what has taken place.", style = "font-family: 'Trebuchet MS';"),
+    p("Our hope is that this tool might be another step on your reflective journey. By looking at your ministry in terms of things that have changed, things stayed the same, and things that had ended, we hope that you will be able to build a picture of the areas of life that your church has focused on during the Coronavirus crisis. It may be that new things have begun as well, and this will help you to see which areas of church life have flourished during this unique time.", style = "font-family: 'Trebuchet MS';"),
     p("We have divided church life into seven broad areas. In no particular order these are:", style = "font-family: 'Trebuchet MS';"),
     tags$div(
        tags$ul(
@@ -175,8 +175,19 @@ ui <- fluidPage(
           style = "font-family: 'Trebuchet MS';"
        )
     ),
+    p("Activities may fit into more than one category, or you may not be sure where something fits. This tool is here to serve you, so place it where seems best to you.", style = "font-family: 'Trebuchet MS';"),
+    h3("What can I use this for?", style = "font-family: 'Trebuchet MS';"),
+    p("The visualisation of your data could be useful in a variety of ways. It may:", style = "font-family: 'Trebuchet MS';"),
+    tags$div(
+       tags$ul(
+          tags$li("Help you to think open endedly about how your church is responding"),
+          tags$li("Give you something to reflect on with your PCC"), 
+          tags$li("Form part of a MAP process"),
+          style = "font-family: 'Trebuchet MS';"
+       )
+    ),
     p(),
-      h2("Twitter Sharing", style = "font-family: 'Impact';"),
+      h3("Twitter Sharing", style = "font-family: 'Trebuchet MS';"),
       p(
          t("Take part in the wider conversation about change by sharing your results on Twitter. You'll need to"),
          strong("sign in with Twitter before you fill in the table below"),
