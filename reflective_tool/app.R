@@ -50,10 +50,10 @@ makeNameInputs <- function(tab = NULL, rows = NULL) {
                            case_when(
                            str_detect(tab, "communal worship") ~ "Congregational  singing",
                            str_detect(tab, "community activities") ~ "Board games night",
-                           str_detect(tab, "discipleship") ~ "Student one-to-ones",
-                           str_detect(tab, "evangelism") ~ "Board games night",
-                           str_detect(tab, "prayer") ~ "Wednesday morning prayer meeting",
-                           str_detect(tab, "sacraments") ~ "Sunday morning communion",
+                           str_detect(tab, "discipleship") ~ "Student 1-to-1's",
+                           str_detect(tab, "evangelism") ~ "Games night",
+                           str_detect(tab, "prayer") ~ "Wednesday AM prayer",
+                           str_detect(tab, "sacraments") ~ "Sunday AM communion",
                            str_detect(tab, "social action") ~ "Food bank volunteering",
                            TRUE ~ ""
                               )
