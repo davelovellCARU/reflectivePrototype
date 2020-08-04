@@ -155,7 +155,7 @@ url <- get_authorization_url(app, "https://famousrapperdavesantan.shinyapps.io/r
 ui <- fluidPage(
    theme = shinytheme("lumen"),
    add_busy_spinner(spin = "fading-circle"),
-
+   tags$image(src = 'resources/placeholder.png', height = "50%", width = "50%"),
  column(
     titlePanel(h1("Reflecting on Change", style = "font-family: 'Impact';"), windowTitle = "Church Army's Reflective Tool"),
     width = 6, offset = 3,
@@ -278,7 +278,7 @@ https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/"
                   } else {
                      paste0("I've been using Church Army's new reflective tool to review how ministry at ",
                             str_trim(input$communityName),
-                            "has changed during COVID-19.
+                            " has changed during COVID-19.
 Take some time to reflect and discover your ministerial visualisation here:
 https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/")
                   }) %>% 
@@ -522,17 +522,17 @@ https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/")
                                                        "Ended" = .4)) +
                       xlab(NULL) +
                       ylab(NULL) +
-                      theme(axis.text.x = element_text(size = 22,
+                      theme(axis.text.x = element_text(size = 27,
                                                        angle = 
                                                           360 / (2 * pi) * seq(2 * pi - pi / 7, pi / 7, len = 7)),
-                            plot.title = element_text(size = 24,
+                            plot.title = element_text(size = 35,
                                                       margin = unit(c(0,0,10,0), "mm")),
                             panel.grid = element_blank(),
-                            plot.caption = element_text(size = 20, colour = "grey45"),
-                            plot.margin = unit(c(0, 80, 0, 15), "mm"),
-                            legend.text = element_text(size = 17),
-                            legend.title = element_text(size = 20),
-                            legend.position = c(1.3,.5)) +
+                            plot.caption = element_text(size = 25, colour = "grey45"),
+                            plot.margin = unit(c(0, 90, 0, 15), "mm"),
+                            legend.text = element_text(size = 25),
+                            legend.title = element_text(size = 32),
+                            legend.position = c(1.3,.75)) +
                       labs(caption = "Church Army") +
                       ggtitle(
                          case_when(
@@ -547,8 +547,8 @@ https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/")
                    imageName(sha1(toString(isolate(activities()))))
                    
                    jpeg(paste0("www/plots/", imageName(),".jpeg"),
-                        res = 350, 
-                        height = 3000, 
+                        res = 250, 
+                        height = 2400,
                         width = 3000, 
                         units = "px")
                    print(q)
@@ -573,5 +573,5 @@ https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/")
                 })
 }
 
-# Run the application 
+# Run the application
 shinyApp(ui = ui, server = server)
