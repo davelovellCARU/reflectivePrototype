@@ -526,8 +526,7 @@ https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/")
                                                        angle = 
                                                           360 / (2 * pi) * seq(2 * pi - pi / 7, pi / 7, len = 7)),
                             plot.title = element_text(size = 24,
-                                                      margin = unit(c(0,0,10,0), "mm"),
-                                                      hjust = -.25),
+                                                      margin = unit(c(0,0,10,0), "mm")),
                             panel.grid = element_blank(),
                             plot.caption = element_text(size = 20, colour = "grey45"),
                             plot.margin = unit(c(0, 80, 0, 15), "mm"),
