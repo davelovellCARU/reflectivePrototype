@@ -155,7 +155,7 @@ url <- get_authorization_url(app, "https://famousrapperdavesantan.shinyapps.io/r
 ui <- fluidPage(
    theme = shinytheme("lumen"),
    add_busy_spinner(spin = "fading-circle"),
-   tags$image(src = 'resources/placeholder.png', height = "50%", width = "50%"),
+   # tags$image(src = 'resources/placeholder.png', height = "50%", width = "50%"),
  column(
     titlePanel(h1("Reflecting on Change", style = "font-family: 'Impact';"), windowTitle = "Church Army's Reflective Tool"),
     width = 6, offset = 3,
