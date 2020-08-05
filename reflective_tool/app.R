@@ -150,12 +150,13 @@ get_authorization_url <-
       authorize_url 
    } # also stole this lol
 
-url <- get_authorization_url(app, "https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/")
+url <- get_authorization_url(app, "https://churcharmy.shinyapps.io/reflective-resource/")
 
 ui <- fluidPage(
    theme = shinytheme("lumen"),
    add_busy_spinner(spin = "fading-circle"),
-   # tags$image(src = 'resources/placeholder.png', height = "50%", width = "50%"),
+   column(width = 12,
+   tags$image(src = 'resources/carulogo.jpg', height = "20%", width = "20%", align = "left")),
  column(
     titlePanel(h1("Reflecting on Change", style = "font-family: 'Impact';"), windowTitle = "Church Army's Reflective Tool"),
     width = 6, offset = 3,
@@ -274,13 +275,13 @@ server <- function(input, output, session) {
                   {
                "I've been using Church Army's new reflective tool to review how ministry has changed during COVID-19.
 Take some time to reflect and discover your ministerial visualisation here:
-https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/"
+https://churcharmy.shinyapps.io/reflective-resource/"
                   } else {
                      paste0("I've been using Church Army's new reflective tool to review how ministry at ",
                             str_trim(input$communityName),
                             " has changed during COVID-19.
 Take some time to reflect and discover your ministerial visualisation here:
-https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/")
+https://churcharmy.shinyapps.io/reflective-resource/")
                   }) %>% 
                         str_sub(1,280)
                )
@@ -338,6 +339,8 @@ https://famousrapperdavesantan.shinyapps.io/reflective_tool_twitter_test/")
                    rtweet::post_tweet(token = user_token,
                                       status = input$tweetBody,
                                       media = paste0("www/plots/", imageName(),".jpeg"))
+                   
+                   removeModal()
                 })
    
 #### status_split used to reformat data when making visualisation ####
