@@ -160,7 +160,7 @@ ui <- fluidPage(
  column(
     titlePanel(h1("Reflecting on Change", style = "font-family: 'Impact';"), windowTitle = "Church Army's Reflective Tool"),
     width = 6, offset = 3,
-    p("At Church Army, we believe that local church practitioners are one of the leading experts on your own missional context. That's why we've created this tool: to help you to reflect on how your church has responded to its new context.", style = "font-family: 'Trebuchet MS';"),
+    p("At Church Army, we believe that local church practitioners are the leading experts on their own missional setting. That's why we've created this tool: to help you to reflect on how your church has responded to its new context.", style = "font-family: 'Trebuchet MS';"),
     p("Over the last few months, many of the activities, events, and gatherings that our churches participate in have changed beyond recognition. In the midst of that change, it may have been difficult to find time to reflect on what has taken place.", style = "font-family: 'Trebuchet MS';"),
     p("Our hope is that this tool might be another step on your reflective journey. By looking at your ministry in terms of rythms that have changed, stayed the same, or ended, we hope that you will be able to build a picture of the areas of life that your church has focused on during the Coronavirus crisis. It may be that new things have begun as well, and this will help you to see which areas of church life have flourished during this unique time.", style = "font-family: 'Trebuchet MS';"),
     p("We have divided church life into seven broad areas. In no particular order these are:", style = "font-family: 'Trebuchet MS';"),
