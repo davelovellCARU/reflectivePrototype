@@ -22,7 +22,7 @@ library("digest")
 
 ### VARIABLES AND FUNCTIONS ####
 ## Variables -------------------------------------------------------------
-statusChoices <- c("started", "ended", "changed", "stayed the same")
+statusChoices <- c("started", "suspended/ended", "changed", "stayed the same")
 n_rows <- 5
 
 ## Functions ------------------------------------------------------------------
@@ -51,7 +51,7 @@ makeNameInputs <- function(tab = NULL, rows = NULL) {
                            str_detect(tab, "communal worship") ~ "Congregational  singing",
                            str_detect(tab, "community activities") ~ "Board games night",
                            str_detect(tab, "discipleship") ~ "Student 1-to-1's",
-                           str_detect(tab, "evangelism") ~ "Games night",
+                           str_detect(tab, "evangelism") ~ "Board games night",
                            str_detect(tab, "prayer") ~ "Wednesday AM prayer",
                            str_detect(tab, "sacraments") ~ "Sunday AM communion",
                            str_detect(tab, "social action") ~ "Food bank volunteering",
@@ -166,7 +166,7 @@ ui <- fluidPage(
     p("We have divided church life into seven broad areas. In no particular order these are:", style = "font-family: 'Trebuchet MS';"),
     tags$div(
        tags$ul(
-          tags$li("Community"),
+          tags$li("Community Activities"),
           tags$li("Discipleship"), 
           tags$li("Communal Worship"),
           tags$li("Sacraments"), 
@@ -176,21 +176,23 @@ ui <- fluidPage(
           style = "font-family: 'Trebuchet MS';"
        )
     ),
-    p("Activities may fit into more than one category, or you may not be sure where something fits. This tool is here to serve you, so place it where seems best to you.", style = "font-family: 'Trebuchet MS';"),
+    p("If an activity fits under two categories, you may wish to count it twice. This tool is for your benefit, so do whatever makes the most sense to you.", style = "font-family: 'Trebuchet MS';"),
+    h3("How to use this tool:", style = "font-family: 'Trebuchet MS';"),
+    p("The interface below consists of seven tabs, each of which represents an area of ministry. These tabs each contain one example activity, which you may delete.", style = "font-family: 'Trebuchet MS';"),
+    p("To add an activity, simply type its name into the one of the 'Activity' fields and press 'Enter' on your keyboard. You will also need to press enter when removing activities. Once you've entered an activity, choose an option from the adjacent list to describe how that activity has changed. At any time you can press 'Create my visualisation' to visualise your results.", style = "font-family: 'Trebuchet MS';"),
     h3("What can I use this for?", style = "font-family: 'Trebuchet MS';"),
     p("The visualisation of your data could be useful in a variety of ways. It may:", style = "font-family: 'Trebuchet MS';"),
     tags$div(
        tags$ul(
           tags$li("Help you to think open endedly about how your church is responding"),
-          tags$li("Give you something to reflect on with your PCC"), 
-          tags$li("Form part of a MAP process"),
+          tags$li("Give you something to reflect on with your Parochial Church Council (PCC)"), 
+          tags$li("Form part of a Mission Action Plan (MAP) process"),
           style = "font-family: 'Trebuchet MS';"
        )
     ),
-    p(),
-      h3("Twitter Sharing", style = "font-family: 'Trebuchet MS';"),
+    h3("Twitter Sharing", style = "font-family: 'Trebuchet MS';"),
       p(
-         t("Take part in the wider conversation about change by sharing your results on Twitter. You'll need to"),
+         t("You can take part in the wider conversation about change by sharing your results on Twitter. You'll need to"),
          strong("sign in with Twitter before you fill in the table below"),
          t("because the sign-in process will refresh the page. You'll be in full control of what gets tweeted."), style = "font-family: 'Trebuchet MS';"),
       p(),
@@ -225,9 +227,10 @@ ui <- fluidPage(
     textOutput("tweetDescription")
       )
     ),
-   column(8, offset = 2, align = "center",
-    imageOutput("vis")
-    ),
+   column(10, offset = 1, align = "center",
+    imageOutput("vis", width = "100%", height = "600px"),
+   downloadButton("savePlot", "Save visualisation"),
+   downloadButton("downloadData", "Download response data")),
     uiOutput("tweetButton"),
     uiOutput("tweetInput")
     )
@@ -349,7 +352,7 @@ https://churcharmy.shinyapps.io/reflective-resource/")
       statusValue %<>% str_to_lower()
       statusValue %<>% as.character
       
-      if (statusValue == "ended") {
+      if (statusValue == "suspended/ended") {
          beforeStatus <- "existent"
          afterStatus <- "non-existent"
       } else if (statusValue == "started") {
@@ -408,8 +411,22 @@ https://churcharmy.shinyapps.io/reflective-resource/")
        arrange(type, number)})
    
    output$downloadData <- downloadHandler(
-      filename = "activities.csv",
-      content = function(file) {write.csv(activities(), file, row.names = FALSE)}
+      filename = paste0(isolate(input$communityName) %>%
+                                   str_squish %>% str_to_lower %>% str_replace_all("[:space:]", "_"),
+                        "_activity_data.csv"),
+      content = function(file) {write.csv(activities() %>% 
+                                             select(-number) %>% 
+                                             filter(!(activity %in% "")), file, row.names = FALSE)}
+   )
+   
+   output$savePlot <- downloadHandler(
+      filename = paste0(isolate(input$communityName) %>%
+                                   str_squish %>% str_to_lower %>% str_replace_all("[:space:]", "_"),
+                        "_visualisation.jpeg"),
+      content = function(file) {if(file.exists(paste0("www/plots/", imageName(),".jpeg"))){
+         file.copy(paste0("www/plots/", imageName(),".jpeg"), file)
+      }
+      }
    )
     
    ### Make the Graphic ####
@@ -450,13 +467,13 @@ https://churcharmy.shinyapps.io/reflective-resource/")
                                              status %>% 
                                              fct_recode("Stayed the same" = "existent", 
                                                         "Changed" = "different",
-                                                        "Ended" = "non_existent",
+                                                        "(Susp)ended" = "non_existent",
                                                         "New" = "new") %>% 
                                              fct_relevel(rev(
                                                 c("Stayed the same",
                                                   "Changed",
                                                   "New",
-                                                  "Ended")
+                                                  "(Susp)ended")
                                              )))
                       
                       visData %<>% group_by(type)
@@ -513,28 +530,28 @@ https://churcharmy.shinyapps.io/reflective-resource/")
                       scale_fill_manual(values = c("Stayed the same" = ct_darkteal(),
                                                    "Changed" = ct_cyan(),
                                                    "New" = ct_purple(),
-                                                   "Ended" = NA),
+                                                   "(Susp)ended" = NA),
                                         na.translate = FALSE) +
                       scale_linetype_manual(values = c("Stayed the same" = "solid",
                                                        "Changed" = "solid",
                                                        "New" = "solid",
-                                                       "Ended" = "dotted")) +
-                      scale_size_manual(values = c("Stayed the same" = .6,
-                                                       "Changed" = .6,
-                                                       "New" = .6,
-                                                       "Ended" = .4)) +
+                                                       "(Susp)ended" = "dotted")) +
+                      scale_size_manual(values = c("Stayed the same" = .9,
+                                                       "Changed" = .9,
+                                                       "New" = .9,
+                                                       "(Susp)ended" = .6)) +
                       xlab(NULL) +
                       ylab(NULL) +
-                      theme(axis.text.x = element_text(size = 27,
+                      theme(axis.text.x = element_text(size = 32,
                                                        angle = 
                                                           360 / (2 * pi) * seq(2 * pi - pi / 7, pi / 7, len = 7)),
-                            plot.title = element_text(size = 35,
+                            plot.title = element_text(size = 37,
                                                       margin = unit(c(0,0,10,0), "mm")),
                             panel.grid = element_blank(),
                             plot.caption = element_text(size = 25, colour = "grey45"),
-                            plot.margin = unit(c(0, 90, 0, 15), "mm"),
-                            legend.text = element_text(size = 25),
-                            legend.title = element_text(size = 32),
+                            plot.margin = unit(c(0, 105, 0, 15), "mm"),
+                            legend.text = element_text(size = 28),
+                            legend.title = element_text(size = 35),
                             legend.position = c(1.3,.75)) +
                       labs(caption = "Church Army") +
                       ggtitle(
@@ -550,9 +567,9 @@ https://churcharmy.shinyapps.io/reflective-resource/")
                    imageName(sha1(toString(isolate(activities()))))
                    
                    jpeg(paste0("www/plots/", imageName(),".jpeg"),
-                        res = 250, 
-                        height = 2400,
-                        width = 3000, 
+                        res = 450, 
+                        height = 2400 * (450/250),
+                        width = 3000 * (450/250), 
                         units = "px")
                    print(q)
                    dev.off()
@@ -563,7 +580,7 @@ https://churcharmy.shinyapps.io/reflective-resource/")
                       
                       list(src = outfile,
                            alt = "Visualisation of user input",
-                           width = 500)
+                           width = 750)
                    }, deleteFile = FALSE)
                    
                    output$tweetVis <- renderImage({
