@@ -276,7 +276,7 @@ server <- function(input, output, session) {
                   (
                   if (is.null(input$communityName)|input$communityName == "")
                   {
-               "I've been using Church Army's new reflective tool to review how ministry has changed during COVID-19.
+               "I've been using @ChurchArmy's new reflective tool to review how ministry has changed during COVID-19.
 Take some time to reflect and discover your ministerial visualisation here:
 https://churcharmy.shinyapps.io/reflective-resource/"
                   } else {

@@ -5,9 +5,15 @@ account: famousrapperdavesantan
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2643406
+<<<<<<< Updated upstream
 bundleId: 3579830
 url: https://churcharmy.shinyapps.io/reflective-resource/
 when: 1598965202.27631
+=======
+bundleId: 3605569
+url: https://churcharmy.shinyapps.io/reflective-resource/
+when: 1599556064.01071
+>>>>>>> Stashed changes
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: activities.csv|activities.rdat|introduction.md|usefulbits.R|reprex/app.R
