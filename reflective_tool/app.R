@@ -53,7 +53,7 @@ makeNameInputs <- function(tab = NULL, rows = NULL) {
                            str_detect(tab, "discipleship") ~ "Student 1-to-1's",
                            str_detect(tab, "evangelism") ~ "Board games night",
                            str_detect(tab, "prayer") ~ "Wednesday AM prayer",
-                           str_detect(tab, "sacraments") ~ "Sunday AM communion",
+                           str_detect(tab, "life events") ~ "Confirmations",
                            str_detect(tab, "social action") ~ "Food bank volunteering",
                            TRUE ~ ""
                               )
@@ -169,7 +169,7 @@ ui <- fluidPage(
           tags$li("Community Activities"),
           tags$li("Discipleship"), 
           tags$li("Communal Worship"),
-          tags$li("Sacraments"), 
+          tags$li("Life Events"), 
           tags$li("Evangelism"),
           tags$li("Social Action"),
           tags$li("Prayer"),
@@ -213,7 +213,7 @@ ui <- fluidPage(
        tabPanel("Community Activities", makeInputsTab("Community Activities")),
        tabPanel("Discipleship", makeInputsTab("Discipleship")),
        tabPanel("Communal Worship", makeInputsTab("Communal Worship")),
-       tabPanel("Sacraments", makeInputsTab("Sacraments")),
+       tabPanel("Life Events", makeInputsTab("Life Events")),
        tabPanel("Evangelism", makeInputsTab("Evangelism")),
        tabPanel("Social Action", makeInputsTab("Social Action")),
        tabPanel("Prayer", makeInputsTab("Prayer"))
@@ -238,6 +238,8 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
    ### Watch Twitter button ------
+   
+   if(!dir.exists("www/plots")) dir.create("www/plots")
    
    imageName <- reactiveVal(character(0))
    tweetImageName <- reactiveVal(character(0))
@@ -393,7 +395,7 @@ https://churcharmy.shinyapps.io/reflective-resource/")
            c("community_activities",
              "discipleship",
              "communal_worship",
-             "sacraments",
+             "life_events",
              "evangelism",
              "social_action",
              "prayer"),
