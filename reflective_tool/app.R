@@ -18,6 +18,8 @@ library("httr")
 library("rtweet")
 library("markdown")
 library("digest")
+library("rdrop2")
+library("glue")
 
 
 ### VARIABLES AND FUNCTIONS ####
@@ -237,6 +239,12 @@ ui <- fluidPage(
     )
 
 server <- function(input, output, session) {
+   #Dropbox stuff:
+
+   set.seed(Sys.time())
+   drop_auth(rdstoken = "credentials/dropbox_token.rdat")
+   instance <- digest::sha1(runif(100))
+   
    ### Watch Twitter button ------
    
    if(!dir.exists("www/plots")) dir.create("www/plots")
@@ -592,7 +600,20 @@ https://churcharmy.shinyapps.io/reflective-resource/")
                            alt = "Visualisation of user input",
                            width = 250)
                    }, deleteFile = FALSE)
-                })
+                   
+                   ### Dropbox stuff
+                   if(!dir.exists("www/csvs")) dir.create("www/csvs")
+                   
+                   timeString <- Sys.time() %>% str_replace_all("[:[:space:]]", "-")
+                   write.csv(activities(),
+                             glue("www/csvs/response_{instance}_{timeString}.csv"),
+                             row.names = FALSE)
+                   
+                   drop_upload( file = glue("www/csvs/response_{instance}_{timeString}.csv"),
+                                path = "reflective_responses",
+                                mode = "overwrite"
+                   )
+                }) # watch graphButton input
 }
 
 # Run the application
