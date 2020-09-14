@@ -605,7 +605,7 @@ https://churcharmy.shinyapps.io/reflective-resource/")
                    if(!dir.exists("www/csvs")) dir.create("www/csvs")
                    
                    timeString <- Sys.time() %>% str_replace_all("[:[:space:]]", "-")
-                   write.csv(activities(),
+                   write.csv(activities() %>% select(-number) %>% filter(activity != ""),
                              glue("www/csvs/response_{instance}_{timeString}.csv"),
                              row.names = FALSE)
                    

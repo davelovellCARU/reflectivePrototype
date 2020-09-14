@@ -5,8 +5,9 @@ account: famousrapperdavesantan
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2643406
-bundleId: 3614274
+bundleId: 3626901
 url: https://churcharmy.shinyapps.io/reflective-resource/
-when: 1599726382.25774
+when: 1600079693.87145
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: www/plots/51cc64d302e173b4973fd01b45a1ac5a4ba1d975.jpeg
