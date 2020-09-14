@@ -3,3 +3,4 @@
 .RData
 .Ruserdata
 /reflective_tool/credentials/
+.httr-oauth
